@@ -1,0 +1,58 @@
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "auth", "storage"]
+extra_search_path = ["public"]
+max_rows = 1000
+
+[db]
+migration_dirs = ["supabase/migrations"]
+
+[auth]
+enabled = true
+sessions_timeout = "7 days"
+email_confirmations = false
+password_min_length = 8
+
+[edge_runtime]
+enabled = true
+policy = "per_worker"
+
+[functions]
+verify_jwt = true
+
+[functions.process-match]
+verify_jwt = false
+
+[functions.auto-confirm]
+verify_jwt = false
+
+[functions.sync-rankings]
+verify_jwt = false
+
+[functions.process-auction]
+verify_jwt = false
+
+[functions.finance-passive]
+verify_jwt = false
+
+[functions.season-rollover]
+verify_jwt = false
+
+[functions.daily-reward-cron]
+verify_jwt = false
+
+[functions.apply-infra-bonus]
+verify_jwt = false
+
+[functions.mission-completer]
+verify_jwt = false
+
+[functions.news-generator]
+verify_jwt = false
+
+[functions.rivalry-detector]
+verify_jwt = false
+
+[functions.tournament-payout]
+verify_jwt = false
