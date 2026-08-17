@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { LayoutDashboard, Trophy, Shield, Coins, BarChart3, Gamepad2, Swords, Store, Users, LogOut, Menu, X, Gavel, ShieldAlert, Globe, CalendarDays, TrendingUp, PiggyBank, MessageCircle } from 'lucide-react'
+import { LayoutDashboard, Shield, Coins, BarChart3, Gamepad2, Swords, Store, Users, LogOut, Menu, X, Gavel, ShieldAlert, Globe, CalendarDays, TrendingUp, PiggyBank, MessageCircle } from 'lucide-react'
 import { useState } from 'react'
 
 interface NavItem { label: string; href: string; icon: React.ReactNode; badge?: string }
@@ -52,14 +52,14 @@ export function AppSidebar({ username = 'Manager', balance = 0, isGuest = false 
     </div>
     {isGuest && <div className="mb-4 rounded-xl border border-primary/15 bg-primary/[.045] p-3"><div className="flex items-center gap-2"><Gamepad2 className="h-4 w-4 text-primary"/><span className="text-xs font-semibold text-primary">Modo visitante</span></div><p className="mt-1 text-[10px] text-muted-foreground">Explora a plataforma. Entra para competir.</p></div>}
     <div className="mb-5 rounded-xl border border-white/[.045] bg-white/[.025] p-3">
-      <div className="flex items-center justify-between"><span className="text-[10px] font-semibold uppercase tracking-[.12em] text-muted-foreground">Gold</span>{!isGuest && <Link href="/economy" className="text-[10px] font-semibold text-primary hover:text-primary/80">Economia</Link>}</div>
-      <div className="mt-1 flex items-center gap-2"><span className="flex h-5 w-5 items-center justify-center rounded-full border border-primary/30 bg-primary/10"><Coins className="h-3 w-3 text-primary"/></span><span className="font-bold tabular-nums text-foreground">{balance.toLocaleString()}</span><span className="text-[10px] text-muted-foreground">saldo</span></div>
+      <div className="flex items-center justify-between"><span className="text-[10px] font-semibold uppercase tracking-[.12em] text-muted-foreground">Silver legado</span>{!isGuest && <Link href="/economy" className="text-[10px] font-semibold text-primary hover:text-primary/80">Economia</Link>}</div>
+      <div className="mt-1 flex items-center gap-2"><span className="flex h-5 w-5 items-center justify-center rounded-full border border-white/10 bg-white/[.04]"><Coins className="h-3 w-3 text-[var(--silver)]"/></span><span className="font-bold tabular-nums text-foreground">{balance.toLocaleString()}</span><span className="text-[10px] text-muted-foreground">temporário</span></div>
     </div>
     <nav className="flex-1 space-y-1 overflow-y-auto pr-1">
       <NavGroup title="Clube" items={mainNavItems} pathname={pathname} close={()=>setMobileOpen(false)} />
       <NavGroup title="Plataforma" items={secondaryNavItems} pathname={pathname} close={()=>setMobileOpen(false)} />
       <NavGroup title="Finanças" items={financeNavItems} pathname={pathname} close={()=>setMobileOpen(false)} />
-      <div className="my-3 h-px bg-white/[.05]"/><div className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-[.15em] text-muted-foreground/60">Operações</div>{adminNavItems.map(item=><NavLink key={item.href} item={item} pathname={pathname} close={()=>setMobileOpen(false)} destructive />)}
+      <div className="my-3 h-px bg-white/[.05]"/><div className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-[.15em] text-muted-foreground/60">Operações restritas</div>{adminNavItems.map(item=><NavLink key={item.href} item={item} pathname={pathname} close={()=>setMobileOpen(false)} destructive />)}
     </nav>
     <div className="mt-4 border-t border-white/[.055] pt-4"><Link href="/profile" className="mb-2 flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-white/[.035]"><div className="flex h-9 w-9 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-sm font-bold text-primary">{username.charAt(0).toUpperCase()}</div><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{username}</p><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Manager</p></div></Link><Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" onClick={handleLogout}><LogOut className="h-[18px] w-[18px]"/>Sair</Button></div>
   </>
