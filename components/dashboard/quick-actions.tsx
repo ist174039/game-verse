@@ -1,97 +1,79 @@
 import Link from 'next/link'
-import { Gamepad2, Coins, Shield, Trophy, ArrowRight } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { ArrowUpRight, Gem, Globe2, Shield, Store } from 'lucide-react'
+
+const actions = [
+  {
+    label: 'Gerir clube',
+    description: 'Plantel, infraestruturas e identidade',
+    icon: Shield,
+    href: '/club',
+    premium: false,
+  },
+  {
+    label: 'Mercado',
+    description: 'Comprar, vender e acompanhar ativos',
+    icon: Store,
+    href: '/market',
+    premium: false,
+  },
+  {
+    label: 'Comprar Gold',
+    description: 'Moeda premium e financiamento controlado',
+    icon: Gem,
+    href: '/economy/buy',
+    premium: true,
+  },
+  {
+    label: 'Universos',
+    description: 'Explorar ou gerir contextos competitivos',
+    icon: Globe2,
+    href: '/universos',
+    premium: false,
+  },
+]
 
 export function QuickActions() {
-  const actions = [
-    {
-      label: 'Play Match',
-      description: 'Start a quick match',
-      icon: <Gamepad2 className="h-5 w-5" />,
-      href: '/play',
-      color: 'bg-primary/10 text-primary',
-      disabled: true,
-      badge: 'Coming Soon',
-    },
-    {
-      label: 'Buy GameCoins',
-      description: 'Get more coins to upgrade',
-      icon: <Coins className="h-5 w-5" />,
-      href: '/economy',
-      color: 'bg-accent/10 text-accent',
-      disabled: false,
-    },
-    {
-      label: 'Upgrade Club',
-      description: 'Improve your infrastructure',
-      icon: <Shield className="h-5 w-5" />,
-      href: '/club',
-      color: 'bg-chart-3/10 text-chart-3',
-      disabled: false,
-    },
-    {
-      label: 'Join Tournament',
-      description: 'Compete for prizes',
-      icon: <Trophy className="h-5 w-5" />,
-      href: '/tournaments',
-      color: 'bg-chart-4/10 text-chart-4',
-      disabled: true,
-      badge: 'Coming Soon',
-    },
-  ]
-
   return (
-    <div className="rounded-xl border border-border bg-card">
-      <div className="border-b border-border p-4">
-        <h2 className="font-semibold text-foreground">Quick Actions</h2>
+    <section className="clan-panel-neutral rounded-2xl p-4 sm:p-5">
+      <div className="mb-4">
+        <p className="clan-kicker">Ações</p>
+        <h2 className="mt-1 text-lg font-semibold text-foreground">Centro operacional</h2>
       </div>
 
-      <div className="p-4 space-y-3">
-        {actions.map((action) => (
-          <Link
-            key={action.label}
-            href={action.disabled ? '#' : action.href}
-            className={`group flex items-center gap-3 rounded-lg border border-border p-3 transition-colors ${
-              action.disabled 
-                ? 'cursor-not-allowed opacity-60' 
-                : 'hover:bg-secondary/50 hover:border-primary/30'
-            }`}
-          >
-            <div className={`rounded-lg p-2 ${action.color}`}>
-              {action.icon}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-sm font-medium text-foreground">{action.label}</p>
-                {action.badge && (
-                  <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                    {action.badge}
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground truncate">{action.description}</p>
-            </div>
-            {!action.disabled && (
-              <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-            )}
-          </Link>
-        ))}
+      <div className="space-y-1.5">
+        {actions.map((action) => {
+          const Icon = action.icon
+          return (
+            <Link
+              key={action.href}
+              href={action.href}
+              className="group flex items-center gap-3 rounded-xl px-2.5 py-3 transition hover:bg-white/[0.035]"
+            >
+              <span
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${
+                  action.premium
+                    ? 'border-primary/20 bg-primary/[0.08] text-primary'
+                    : 'border-white/[0.06] bg-black/25 text-muted-foreground group-hover:text-foreground'
+                }`}
+              >
+                <Icon className="h-4.5 w-4.5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold text-foreground">{action.label}</span>
+                <span className="mt-0.5 block truncate text-xs text-muted-foreground">{action.description}</span>
+              </span>
+              <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" />
+            </Link>
+          )
+        })}
       </div>
 
-      {/* Daily Reward Banner */}
-      <div className="m-4 mt-0 rounded-lg bg-gradient-to-r from-primary/20 to-accent/20 p-4">
-        <p className="text-sm font-medium text-foreground">Daily Reward Available!</p>
-        <p className="text-xs text-muted-foreground mt-1">
-          Log in daily to earn bonus GameCoins
+      <div className="mt-4 rounded-xl border border-primary/15 bg-[rgba(245,191,22,.045)] px-3.5 py-3">
+        <p className="text-xs font-semibold text-primary">Próxima fase</p>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+          O motor de competições e o ledger Gold/Silver/Bronze serão ligados quando o Supabase definitivo estiver disponível.
         </p>
-        <Button 
-          size="sm" 
-          className="mt-3 bg-primary text-primary-foreground hover:bg-primary/90"
-          disabled
-        >
-          Claim Reward (Soon)
-        </Button>
       </div>
-    </div>
+    </section>
   )
 }
