@@ -6,7 +6,7 @@ import type { ClubLoan, FinancialCycle, GoldToSilverFinancingReceipt, Infrastruc
 import type { AchievementDefinition, BronzeStoreItem, DailyRewardClaim, MissionDefinition, UserAchievement, UserMission } from '@/lib/domain/retention'
 import type { JournalArticle, Notification } from '@/lib/domain/communications'
 import type { AdminAuditLog, CaseStatus, EconomicFreeze, FeatureFlag, FreezeScope, ModerationCase, PlatformConfig, SupportTicket, TicketNote, TicketStatus } from '@/lib/domain/governance'
-import type { ChatMessage, Community, CommunityPost, DirectConversation } from '@/lib/domain/social'
+import type { ChatMessage, Community, CommunityConversation, CommunityMembership, CommunityPost, CommunityVisibility, DirectConversation } from '@/lib/domain/social'
 import type { ClubLiability, CompetitionRegistration, MatchFinancialEvent } from '@/lib/domain/operations'
 
 export interface IdentityRepository { getProfile(userId: UUID): Promise<UserProfile | null>; ensureProfile(userId: UUID, input: { username: string; locale?: string }): Promise<UserProfile> }
@@ -19,7 +19,18 @@ export interface LedgerRepository { getTransactionByIdempotencyKey(key: string):
 export interface ClubEconomyRepository { listSponsorships(clubId: UUID): Promise<SponsorshipContract[]>; listLoans(clubId: UUID): Promise<ClubLoan[]>; listFinancialCycles(clubId: UUID): Promise<FinancialCycle[]>; financeWithGold(input: { clubId: UUID; goldAmount: number; idempotencyKey: string }): Promise<GoldToSilverFinancingReceipt>; originateLoan(input: { clubId: UUID; principal: number; idempotencyKey: string }): Promise<ClubLoan>; repayLoanInstallment(input: { loanId: UUID; idempotencyKey: string }): Promise<LoanRepaymentReceipt> }
 export interface RetentionRepository { listActiveMissions(userId: UUID): Promise<Array<{ definition: MissionDefinition; progress: UserMission | null }>>; claimDailyReward(): Promise<DailyRewardClaim>; listAchievements(userId: UUID): Promise<Array<{ definition: AchievementDefinition; unlocked: UserAchievement | null }>>; listBronzeStore(): Promise<BronzeStoreItem[]> }
 export interface CommunicationRepository { listJournal(universeId: UUID, limit?: number): Promise<JournalArticle[]>; listNotifications(userId: UUID, limit?: number): Promise<Notification[]>; markNotificationRead(notificationId: UUID): Promise<void> }
-export interface SocialRepository { listCommunities(userId: UUID): Promise<Community[]>; listCommunityPosts(communityId: UUID, limit?: number): Promise<CommunityPost[]>; listConversations(userId: UUID): Promise<DirectConversation[]>; listMessages(conversationId: UUID, limit?: number): Promise<ChatMessage[]> }
+export interface SocialRepository {
+  listCommunities(userId:UUID):Promise<Community[]>
+  listCommunityPosts(communityId:UUID,limit?:number):Promise<CommunityPost[]>
+  listConversations(userId:UUID):Promise<DirectConversation[]>
+  listCommunityConversations(userId:UUID):Promise<CommunityConversation[]>
+  listMessages(conversationId:UUID,limit?:number):Promise<ChatMessage[]>
+  createCommunity(input:{name:string;slug:string;description?:string|null;visibility:CommunityVisibility}):Promise<Community>
+  joinCommunity(communityId:UUID):Promise<CommunityMembership>
+  createPost(input:{communityId:UUID;body:string}):Promise<CommunityPost>
+  startDirectConversation(otherUserId:UUID):Promise<{id:UUID;createdAt:string}>
+  sendMessage(input:{conversationId:UUID;body:string}):Promise<ChatMessage>
+}
 export interface GovernanceRepository {
   listTickets(limit?: number): Promise<SupportTicket[]>
   listModerationCases(limit?: number): Promise<ModerationCase[]>

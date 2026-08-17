@@ -1,24 +1,9 @@
-import { notFound } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createApplicationServices } from '@/lib/infrastructure/repositories/supabase/factory'
 import { CommunityPageClient } from '@/components/community/community-page-client'
+import type { CommunityRole } from '@/lib/domain/social'
 
-export const dynamic = 'force-dynamic'
+export const dynamic='force-dynamic'
 
-export default async function CommunityPage() {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return notFound()
-
-  const { data: profile } = await supabase
-    .from('user_profile')
-    .select('id, username, avatar_url')
-    .eq('id', user.id)
-    .single()
-
-  return (
-    <CommunityPageClient
-      username={profile?.username || 'Manager'}
-    />
-  )
-}
+export default async function CommunityPage({searchParams}:{searchParams:Promise<{community?:string}>}){const params=await searchParams;const supabase=await createClient();const{data:{user}}=await supabase.auth.getUser();if(!user||user.is_anonymous)redirect('/auth/login');const services=createApplicationServices(supabase);const[profileQ,communities,membershipQ]=await Promise.all([supabase.from('user_profile').select('username').eq('id',user.id).maybeSingle(),services.social.listCommunities(user.id),supabase.from('community_membership').select('community_id,role').eq('user_id',user.id)]);if(profileQ.error)throw profileQ.error;if(membershipQ.error)throw membershipQ.error;const roleByCommunity=new Map<string,CommunityRole>((membershipQ.data??[]).map((m:any)=>[m.community_id,m.role as CommunityRole]));const selected=communities.find(c=>c.id===params.community)??communities[0]??null;const posts=selected?await services.social.listCommunityPosts(selected.id,50):[];const authorIds=[...new Set(posts.map(p=>p.authorUserId))];const authors=new Map<string,{id:string;username:string;avatarUrl:string|null}>();if(authorIds.length>0){const{data,error}=await supabase.from('user_profile').select('id,username,avatar_url').in('id',authorIds);if(error)throw error;for(const row of data??[])authors.set(row.id,{id:row.id,username:row.username,avatarUrl:row.avatar_url??null})}return <CommunityPageClient username={profileQ.data?.username??'Manager'} communities={communities.map(community=>({community,role:roleByCommunity.get(community.id)??null}))} selected={selected} selectedRole={selected?roleByCommunity.get(selected.id)??null:null} posts={posts.map(post=>({id:post.id,body:post.body,createdAt:post.createdAt,author:authors.get(post.authorUserId)??{id:post.authorUserId,username:'Manager',avatarUrl:null}}))}/>}

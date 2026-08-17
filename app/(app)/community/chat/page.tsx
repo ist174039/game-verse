@@ -1,25 +1,8 @@
-import { notFound } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { createApplicationServices } from '@/lib/infrastructure/repositories/supabase/factory'
 import { CommunityChatClient } from '@/components/community/community-chat-client'
 
-export const dynamic = 'force-dynamic'
+export const dynamic='force-dynamic'
 
-export default async function CommunityChatPage() {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return notFound()
-
-  const { data: profile } = await supabase
-    .from('user_profile')
-    .select('id, username, avatar_url')
-    .eq('id', user.id)
-    .single()
-
-  return (
-    <CommunityChatClient
-      userId={user.id}
-      username={profile?.username || 'Manager'}
-    />
-  )
-}
+export default async function CommunityChatPage({searchParams}:{searchParams:Promise<{conversation?:string}>}){const params=await searchParams;const supabase=await createClient();const{data:{user}}=await supabase.auth.getUser();if(!user||user.is_anonymous)redirect('/auth/login');const services=createApplicationServices(supabase);const[profileQ,conversations]=await Promise.all([supabase.from('user_profile').select('username').eq('id',user.id).maybeSingle(),services.social.listCommunityConversations(user.id)]);if(profileQ.error)throw profileQ.error;const selected=conversations.find(c=>c.id===params.conversation)??conversations[0]??null;const messages=selected?await services.social.listMessages(selected.id,200):[];const authorIds=[...new Set(messages.map(m=>m.senderUserId))];const authorNames=new Map<string,string>();if(authorIds.length>0){const{data,error}=await supabase.from('user_profile').select('id,username').in('id',authorIds);if(error)throw error;for(const row of data??[])authorNames.set(row.id,row.username)}return <CommunityChatClient username={profileQ.data?.username??'Manager'} conversations={conversations} selectedConversationId={selected?.id??null} messages={messages.map(m=>({...m,authorName:authorNames.get(m.senderUserId)??'Manager'}))} currentUserId={user.id}/>}

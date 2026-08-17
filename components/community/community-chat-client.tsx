@@ -1,34 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { Hash, LockKeyhole, MessageCircle, ShieldCheck, Users } from 'lucide-react'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { MessageCircle, Send, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-export function CommunityChatClient({ username }: { userId: string; username: string }) {
-  return (
-    <div className="space-y-7">
-      <section className="brand-watermark rounded-2xl border border-white/[0.07] bg-[#0b0b0b] px-5 py-6 sm:px-7">
-        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-          <div><p className="clan-kicker">Chat</p><h1 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">Conversas ligadas ao contexto certo.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">{username}, o novo chat terá canais de comunidade, universo, competição, partida e administração. Mensagens deixam de existir apenas no estado local do browser.</p></div>
-          <Button asChild variant="outline" className="border-white/[0.08]"><Link href="/community"><Users className="mr-2 h-4 w-4" />Comunidade</Link></Button>
-        </div>
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-3">
-        <ChatScope icon={Users} title="Community Chat" text="Canais sociais definidos por cada comunidade e sujeitos à sua moderação." />
-        <ChatScope icon={Hash} title="Universe Chat" text="General, competição e anúncios no contexto competitivo correspondente." />
-        <ChatScope icon={MessageCircle} title="Match Chat" text="Coordenação de horário, remarcação e contexto de uma partida específica." />
-      </section>
-
-      <section className="clan-panel-neutral flex min-h-[440px] flex-col items-center justify-center rounded-2xl p-8 text-center">
-        <MessageCircle className="h-10 w-10 text-primary/40" />
-        <h2 className="mt-4 text-xl font-black">Chat real ainda não ligado</h2>
-        <p className="mt-2 max-w-lg text-sm leading-6 text-muted-foreground">Foram removidos canais, utilizadores online e mensagens fictícias. Também foi eliminado o envio que apenas alterava um array local e dava a falsa impressão de persistência.</p>
-        <div className="mt-5 flex items-center gap-2 text-xs text-muted-foreground"><ShieldCheck className="h-4 w-4 text-primary" />REPORT · MUTE · BLOCK · WARN · SUSPEND · BAN</div>
-        <Button disabled className="mt-6"><LockKeyhole className="mr-2 h-4 w-4" />Enviar mensagem</Button>
-      </section>
-    </div>
-  )
-}
-
-function ChatScope({ icon: Icon, title, text }: { icon: typeof Users; title: string; text: string }) { return <article className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-5"><Icon className="h-5 w-5 text-primary" /><h2 className="mt-4 font-black">{title}</h2><p className="mt-2 text-xs leading-5 text-muted-foreground">{text}</p></article> }
+type Conversation={id:string;communityId:string;title:string|null}
+type Message={id:string;body:string;createdAt:string;senderUserId:string;authorName:string}
+export function CommunityChatClient({username,conversations,selectedConversationId,messages,currentUserId}:{username:string;conversations:Conversation[];selectedConversationId:string|null;messages:Message[];currentUserId:string}){const router=useRouter();const[body,setBody]=useState('');const[loading,setLoading]=useState(false);const[error,setError]=useState<string|null>(null);async function send(){if(!selectedConversationId||!body.trim())return;setLoading(true);setError(null);try{const r=await fetch('/api/community/actions',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'send-message',conversationId:selectedConversationId,body:body.trim()})});const p=await r.json();if(!r.ok)throw new Error(p.error||'message_failed');setBody('');router.refresh()}catch(e){setError(e instanceof Error?e.message:'message_failed')}finally{setLoading(false)}}return <div className="space-y-7"><section className="brand-watermark rounded-2xl border border-white/[0.07] bg-[#0b0b0b] px-5 py-6 sm:px-7"><div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="clan-kicker">Community Chat</p><h1 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">Conversas persistentes.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">{username}, cada comunidade tem um canal persistente e apenas os membros conseguem ler ou enviar mensagens.</p></div><Button asChild variant="outline"><Link href="/community"><Users className="mr-2 h-4 w-4"/>Comunidade</Link></Button></div></section><section className="grid min-h-[560px] overflow-hidden rounded-2xl border border-white/[0.07] bg-[#0b0b0b] lg:grid-cols-[280px_1fr]"><aside className="border-b border-white/[.06] p-4 lg:border-b-0 lg:border-r"><p className="px-2 text-[10px] font-bold uppercase tracking-[.14em] text-muted-foreground">Canais</p><div className="mt-3 space-y-1">{conversations.map(c=><Link key={c.id} href={`/community/chat?conversation=${c.id}`} className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm transition ${selectedConversationId===c.id?'bg-primary/[.08] text-primary':'text-muted-foreground hover:bg-white/[.04] hover:text-foreground'}`}><MessageCircle className="h-4 w-4"/><span className="truncate">{c.title??'Comunidade'}</span></Link>)}{conversations.length===0&&<p className="px-2 py-8 text-xs text-muted-foreground">Adere a uma comunidade para ativar o chat.</p>}</div></aside><div className="flex min-h-[500px] flex-col"><div className="flex-1 space-y-3 overflow-y-auto p-4 sm:p-5">{selectedConversationId?messages.map(m=><div key={m.id} className={`flex ${m.senderUserId===currentUserId?'justify-end':'justify-start'}`}><div className={`max-w-[82%] rounded-2xl px-4 py-3 ${m.senderUserId===currentUserId?'bg-primary/[.12]':'bg-white/[.045]'}`}><p className="text-[10px] font-bold text-muted-foreground">{m.authorName}</p><p className="mt-1 whitespace-pre-wrap text-sm leading-5">{m.body}</p><p className="mt-2 text-[9px] text-muted-foreground">{new Date(m.createdAt).toLocaleString('pt-PT')}</p></div></div>):<div className="flex h-full items-center justify-center text-center text-sm text-muted-foreground">Seleciona um canal.</div>}</div>{selectedConversationId&&<div className="border-t border-white/[.06] p-4"><div className="flex gap-2"><textarea value={body} onChange={e=>setBody(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();void send()}}} rows={2} maxLength={4000} className="min-h-11 flex-1 resize-none rounded-xl border border-white/[.08] bg-[#111] px-3.5 py-3 text-sm outline-none focus:border-primary/55" placeholder="Escreve uma mensagem…"/><Button disabled={loading||!body.trim()} onClick={()=>void send()}><Send className="h-4 w-4"/></Button></div>{error&&<p className="mt-2 text-xs text-destructive">{error}</p>}</div>}</div></section></div>}

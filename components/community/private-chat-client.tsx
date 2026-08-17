@@ -1,33 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowLeft, LockKeyhole, MessageCircle, ShieldCheck, UserRound } from 'lucide-react'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { ArrowLeft, MessageCircle, Plus, Send, UserRound } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog'
 
-export function PrivateChatClient({ username }: { userId: string; username: string }) {
-  return (
-    <div className="space-y-7">
-      <Link href="/community" className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"><ArrowLeft className="h-4 w-4" />Comunidade</Link>
-      <section className="brand-watermark rounded-2xl border border-white/[0.07] bg-[#0b0b0b] px-5 py-6 sm:px-7">
-        <p className="clan-kicker">Mensagens diretas</p>
-        <h1 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">Conversas privadas entre identidades reais.</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">{username}, as DMs serão persistidas e sujeitas a block/report. Foram retiradas as conversas e convites fictícios que existiam apenas em memória local.</p>
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-3">
-        <DmRule icon={UserRound} title="Identidade global" text="A conversa pertence aos utilizadores, não aos clubes de um universo específico." />
-        <DmRule icon={ShieldCheck} title="Privacidade & block" text="Bloquear um utilizador impede novas DMs sem apagar o audit trail necessário à moderação." />
-        <DmRule icon={MessageCircle} title="Contexto explícito" text="Convites de jogo e referências a partidas são objetos estruturados, não texto que finge uma ação." />
-      </section>
-
-      <section className="clan-panel-neutral flex min-h-[430px] flex-col items-center justify-center rounded-2xl p-8 text-center">
-        <MessageCircle className="h-10 w-10 text-primary/40" />
-        <h2 className="mt-4 text-xl font-black">Nenhuma conversa carregada</h2>
-        <p className="mt-2 max-w-lg text-sm leading-6 text-muted-foreground">Quando o social schema estiver ativo, esta área lista threads reais, unread state e mensagens persistidas. Não mostramos utilizadores “online” ou mensagens inventadas.</p>
-        <Button disabled className="mt-6"><LockKeyhole className="mr-2 h-4 w-4" />Nova mensagem</Button>
-      </section>
-    </div>
-  )
-}
-
-function DmRule({ icon: Icon, title, text }: { icon: typeof UserRound; title: string; text: string }) { return <article className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-5"><Icon className="h-5 w-5 text-primary" /><h2 className="mt-4 font-black">{title}</h2><p className="mt-2 text-xs leading-5 text-muted-foreground">{text}</p></article> }
+type Thread={id:string;otherId:string;otherUsername:string}
+type Msg={id:string;conversationId:string;senderUserId:string;body:string;createdAt:string}
+export function PrivateChatClient({threads,selectedConversationId,messages,currentUserId}:{threads:Thread[];selectedConversationId:string|null;messages:Msg[];currentUserId:string}){const router=useRouter();const[open,setOpen]=useState(false);const[username,setUsername]=useState('');const[body,setBody]=useState('');const[loading,setLoading]=useState(false);const[error,setError]=useState<string|null>(null);async function action(payload:Record<string,unknown>){setLoading(true);setError(null);try{const r=await fetch('/api/community/actions',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});const p=await r.json();if(!r.ok)throw new Error(p.error||'message_operation_failed');if(payload.action==='start-direct'&&p.conversation?.id){setOpen(false);setUsername('');router.push(`/community/dm?conversation=${p.conversation.id}`)}else{setBody('');router.refresh()}}catch(e){setError(e instanceof Error?e.message:'message_operation_failed')}finally{setLoading(false)}}return <div className="space-y-7"><Link href="/community" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4"/>Comunidade</Link><section className="brand-watermark rounded-2xl border border-white/[0.07] bg-[#0b0b0b] px-5 py-6 sm:px-7"><div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="clan-kicker">Mensagens diretas</p><h1 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">Conversas privadas persistentes.</h1><p className="mt-3 text-sm text-muted-foreground">As DMs pertencem à identidade global e respeitam blocks nos dois sentidos.</p></div><Button onClick={()=>{setError(null);setOpen(true)}}><Plus className="mr-2 h-4 w-4"/>Nova conversa</Button></div></section><section className="grid min-h-[560px] overflow-hidden rounded-2xl border border-white/[0.07] bg-[#0b0b0b] lg:grid-cols-[280px_1fr]"><aside className="border-b border-white/[.06] p-4 lg:border-b-0 lg:border-r"><p className="px-2 text-[10px] font-bold uppercase tracking-[.14em] text-muted-foreground">Conversas</p><div className="mt-3 space-y-1">{threads.map(t=><Link key={t.id} href={`/community/dm?conversation=${t.id}`} className={`flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm ${selectedConversationId===t.id?'bg-primary/[.08] text-primary':'text-muted-foreground hover:bg-white/[.04] hover:text-foreground'}`}><UserRound className="h-4 w-4"/><span className="truncate">{t.otherUsername}</span></Link>)}{threads.length===0&&<p className="px-2 py-8 text-xs text-muted-foreground">Ainda não tens DMs.</p>}</div></aside><div className="flex min-h-[500px] flex-col"><div className="flex-1 space-y-3 overflow-y-auto p-4 sm:p-5">{selectedConversationId?messages.map(m=><div key={m.id} className={`flex ${m.senderUserId===currentUserId?'justify-end':'justify-start'}`}><div className={`max-w-[82%] rounded-2xl px-4 py-3 ${m.senderUserId===currentUserId?'bg-primary/[.12]':'bg-white/[.045]'}`}><p className="whitespace-pre-wrap text-sm leading-5">{m.body}</p><p className="mt-2 text-[9px] text-muted-foreground">{new Date(m.createdAt).toLocaleString('pt-PT')}</p></div></div>):<div className="flex h-full items-center justify-center text-center"><div><MessageCircle className="mx-auto h-8 w-8 text-primary/35"/><p className="mt-3 text-sm text-muted-foreground">Seleciona ou inicia uma conversa.</p></div></div>}</div>{selectedConversationId&&<div className="border-t border-white/[.06] p-4"><div className="flex gap-2"><textarea value={body} onChange={e=>setBody(e.target.value)} rows={2} maxLength={4000} className="min-h-11 flex-1 resize-none rounded-xl border border-white/[.08] bg-[#111] px-3.5 py-3 text-sm outline-none focus:border-primary/55" placeholder="Mensagem privada…"/><Button disabled={loading||!body.trim()} onClick={()=>action({action:'send-message',conversationId:selectedConversationId,body:body.trim()})}><Send className="h-4 w-4"/></Button></div>{error&&<p className="mt-2 text-xs text-destructive">{error}</p>}</div>}</div></section><ConfirmationDialog open={open} onOpenChange={o=>{if(!loading)setOpen(o)}} title="Nova conversa" description="Introduz o username exato do manager." confirmLabel="Abrir conversa" isLoading={loading} onConfirm={()=>action({action:'start-direct',username:username.trim()})}><label className="text-xs font-bold text-muted-foreground">Username</label><input value={username} onChange={e=>setUsername(e.target.value)} className="mt-2 h-10 w-full rounded-xl border border-white/[.08] bg-[#111] px-3.5 text-sm outline-none focus:border-primary/55"/>{error&&<p className="mt-2 text-xs text-destructive">{error}</p>}</ConfirmationDialog></div>}
