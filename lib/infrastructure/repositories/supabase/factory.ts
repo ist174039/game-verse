@@ -12,6 +12,7 @@ import { SupabaseCommunicationRepository } from './communication-repository'
 import { SupabaseSocialRepository } from './social-repository'
 import { SupabaseOperationsRepository } from './operations-repository'
 import { SupabaseGovernanceRepository } from './governance-repository'
+import { SupabaseCompetitionAdminRepository } from './competition-admin-repository'
 import { SupabaseDashboardReadRepository, SupabaseOnboardingReadRepository, SupabaseUniverseOverviewReadRepository } from './read-repositories'
 import { SupabaseUniverseDirectoryReadRepository } from './universe-directory-read-repository'
 import { SupabaseSquadReadRepository } from './squad-read-repository'
@@ -30,4 +31,4 @@ export function createApplicationServices(client: SupabaseClient): ApplicationSe
     reads: { dashboard: new SupabaseDashboardReadRepository(client), onboarding: new SupabaseOnboardingReadRepository(client), universeOverview: new SupabaseUniverseOverviewReadRepository(client), universeDirectory: new SupabaseUniverseDirectoryReadRepository(client), squad: new SupabaseSquadReadRepository(client), market: new SupabaseMarketReadRepository(client), competitionHub: new SupabaseCompetitionHubReadRepository(client), competitionDetail: new SupabaseCompetitionDetailReadRepository(client), clubOverview: new SupabaseClubOverviewReadRepository(client), profile: new SupabaseProfileReadRepository(client), rankings: new SupabaseRankingsReadRepository(client), economy: new SupabaseEconomyReadRepository(client), goldCatalog: new SupabaseGoldCatalogReadRepository(client) },
   }
 }
-export function createAdminApplicationServices(userClient: SupabaseClient, serviceClient: SupabaseClient): AdminApplicationServices { return { ...createApplicationServices(userClient), governance: new SupabaseGovernanceRepository(serviceClient), adminReads: { overview: new SupabaseAdminPlatformOverviewReadRepository(serviceClient) } } }
+export function createAdminApplicationServices(userClient: SupabaseClient, serviceClient: SupabaseClient): AdminApplicationServices { return { ...createApplicationServices(userClient), governance: new SupabaseGovernanceRepository(serviceClient), competitionAdmin: new SupabaseCompetitionAdminRepository(serviceClient), adminReads: { overview: new SupabaseAdminPlatformOverviewReadRepository(serviceClient) } } }

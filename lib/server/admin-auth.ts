@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { InternalRole } from '@/lib/domain/governance'
 
-export type AdminAction = 'TICKET' | 'MODERATION' | 'FREEZE' | 'CONFIG' | 'REFUND' | 'REVERSAL'
+export type AdminAction = 'TICKET' | 'MODERATION' | 'FREEZE' | 'CONFIG' | 'REFUND' | 'REVERSAL' | 'COMPETITION'
 
 export const ADMIN_ROLES = new Set<InternalRole>(['super_admin','platform_admin','economy_admin','competition_admin','moderator','support_agent','finance_operator','read_only_analyst'])
 
@@ -15,6 +15,7 @@ const permissions: Record<AdminAction, Set<InternalRole>> = {
   CONFIG: new Set(['super_admin','platform_admin']),
   REFUND: new Set(['super_admin','platform_admin','economy_admin','finance_operator']),
   REVERSAL: new Set(['super_admin','platform_admin','economy_admin','competition_admin','finance_operator']),
+  COMPETITION: new Set(['super_admin','platform_admin','competition_admin']),
 }
 
 export interface AdminSession {
