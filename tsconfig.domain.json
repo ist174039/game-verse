@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "allowJs": false,
+    "incremental": false,
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": [
+    "lib/domain/**/*.ts",
+    "lib/application/**/*.ts",
+    "lib/infrastructure/repositories/supabase/**/*.ts"
+  ],
+  "exclude": ["node_modules", ".next", "lib/types.ts"]
+}
