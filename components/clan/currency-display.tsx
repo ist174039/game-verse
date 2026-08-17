@@ -7,20 +7,20 @@ const currencyConfig = {
   gold: {
     label: 'Gold',
     icon: Gem,
-    className: 'text-[var(--brand-gold)]',
-    surface: 'bg-[color:var(--brand-gold-muted)] border-[color:var(--border-active)]',
+    className: 'text-[var(--gold)]',
+    surface: 'bg-[rgba(245,191,22,.07)] border-[rgba(245,191,22,.18)]',
   },
   silver: {
     label: 'Silver',
     icon: Coins,
-    className: 'text-[var(--currency-silver)]',
+    className: 'text-[var(--silver)]',
     surface: 'bg-white/[0.035] border-white/10',
   },
   bronze: {
     label: 'Bronze',
     icon: CircleDollarSign,
-    className: 'text-[var(--currency-bronze)]',
-    surface: 'bg-amber-950/15 border-amber-700/20',
+    className: 'text-[var(--bronze)]',
+    surface: 'bg-[rgba(181,109,42,.07)] border-[rgba(181,109,42,.18)]',
   },
 } as const
 
@@ -59,7 +59,7 @@ export function CurrencyDisplay({
           config.className,
         )}
       >
-        <Icon className={compact ? 'h-3.5 w-3.5' : 'h-4.5 w-4.5'} />
+        <Icon className={compact ? 'h-3.5 w-3.5' : 'h-4 w-4'} />
       </span>
       <div className="min-w-0">
         {!compact && (
