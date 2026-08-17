@@ -3,7 +3,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import {
-  ArrowRight,
   BarChart3,
   Coins,
   Newspaper,
@@ -71,7 +70,7 @@ export function HomeContent() {
               <Link href="/auth/login">Entrar</Link>
             </Button>
             <Button asChild className="bg-[#f2b705] font-bold text-black hover:bg-[#ffd34a]">
-              <Link href="/auth/sign-up">Criar clube <ArrowRight className="ml-2 h-4 w-4" /></Link>
+              <Link href="/auth/sign-up">Criar clube</Link>
             </Button>
           </div>
         </div>
@@ -99,7 +98,7 @@ export function HomeContent() {
               </p>
               <div className="mt-10 flex flex-col gap-3 sm:flex-row">
                 <Button size="lg" asChild className="h-12 bg-[#f2b705] px-7 font-extrabold text-black shadow-[0_0_40px_rgba(242,183,5,.14)] hover:bg-[#ffd34a]">
-                  <Link href="/auth/sign-up">Começar agora <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                  <Link href="/auth/sign-up">Começar agora</Link>
                 </Button>
                 <Button size="lg" variant="outline" asChild className="h-12 border-white/10 bg-white/[0.025] px-7 text-white hover:border-[#f2b705]/30 hover:bg-white/[0.05]">
                   <a href="#plataforma">Descobrir a plataforma</a>
@@ -224,7 +223,7 @@ export function HomeContent() {
             <p className="mt-6 text-xs font-bold uppercase tracking-[0.24em] text-[#f2b705]">A época começa aqui</p>
             <h2 className="mt-4 text-4xl font-black uppercase tracking-[-0.045em] sm:text-6xl">Cria o clube.<br />Constrói o legado.</h2>
             <p className="mx-auto mt-5 max-w-xl leading-7 text-white/48">Entra no Clã das Sombras e começa a construir a tua história competitiva.</p>
-            <Button size="lg" asChild className="mt-9 h-12 bg-[#f2b705] px-8 font-extrabold text-black hover:bg-[#ffd34a]"><Link href="/auth/sign-up">Criar conta <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
+            <Button size="lg" asChild className="mt-9 h-12 bg-[#f2b705] px-8 font-extrabold text-black hover:bg-[#ffd34a]"><Link href="/auth/sign-up">Criar conta</Link></Button>
           </div>
         </section>
       </main>
