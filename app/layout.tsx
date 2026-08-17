@@ -4,51 +4,31 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Geist_Mono } from 'next/font/google'
 import './globals.css'
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-geist-sans',
-})
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-})
+const inter = Inter({ subsets: ['latin'], variable: '--font-geist-sans' })
+const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Clã das Sombras — Clube, Competição e Evolução',
-  description:
-    'Constrói o teu clube, compete, evolui e conquista prestígio no universo Clã das Sombras.',
+  title: {
+    default: 'Clã das Sombras — Gestão e Competição Futebolística',
+    template: '%s · Clã das Sombras',
+  },
+  description: 'Constrói o teu clube, compete em universos, gere mercado e economia e conquista prestígio no Clã das Sombras.',
+  applicationName: 'Clã das Sombras',
   generator: 'Clã das Sombras',
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+    icon: [{ url: '/brand/clan-logo.svg', type: 'image/svg+xml' }],
+    shortcut: '/brand/clan-logo.svg',
+    apple: '/brand/clan-logo.svg',
   },
 }
 
 export const viewport: Viewport = {
-  themeColor: '#d99a18',
+  themeColor: '#050505',
   width: 'device-width',
   initialScale: 1,
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="pt" className={`${inter.variable} ${geistMono.variable} bg-background`}>
       <body className="font-sans antialiased">
