@@ -21,10 +21,10 @@ export default async function DashboardPage() {
     const club = await services.clubs.getForUserInUniverse(user.id, universe.id)
     if (club) { activeUniverse = universe; break }
   }
-  if (!activeUniverse) redirect('/universos')
+  if (!activeUniverse) redirect('/onboarding')
 
   const dashboard = await services.reads.dashboard.load(user.id, activeUniverse.id)
-  if (!dashboard) redirect('/universos')
+  if (!dashboard) redirect('/onboarding')
 
   const ownStanding = dashboard.standings.find(row => row.clubId === dashboard.club.id)
   const gamesPlayed = ownStanding?.played ?? dashboard.recentMatches.length
@@ -32,25 +32,11 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-5 sm:space-y-6">
       <DashboardHeader username={dashboard.user.username || 'Manager'} isNewUser={dashboard.user.managerXp === 0} />
-
       <ClubOverview club={dashboard.club} recentMatches={dashboard.recentMatches} universeName={dashboard.universe.name} />
-
-      <StatsCards
-        silver={dashboard.currencies.silver}
-        gold={dashboard.currencies.gold}
-        bronze={dashboard.currencies.bronze}
-        eloRating={dashboard.club.elo}
-        prestigeScore={dashboard.club.prestige}
-        gamesPlayed={gamesPlayed}
-      />
-
+      <StatsCards silver={dashboard.currencies.silver} gold={dashboard.currencies.gold} bronze={dashboard.currencies.bronze} eloRating={dashboard.club.elo} prestigeScore={dashboard.club.prestige} gamesPlayed={gamesPlayed} />
       <section className="grid gap-5 xl:grid-cols-[1.25fr_.75fr]">
-        <div className="min-w-0">
-          <RecentActivity articles={dashboard.communications.journal} />
-        </div>
-        <div className="min-w-0">
-          <QuickActions />
-        </div>
+        <div className="min-w-0"><RecentActivity articles={dashboard.communications.journal} /></div>
+        <div className="min-w-0"><QuickActions /></div>
       </section>
     </div>
   )
