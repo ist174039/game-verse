@@ -1,5 +1,5 @@
-import { AdminLoginClient } from '@/components/admin/admin-login-client'
+import { redirect } from 'next/navigation'
 
 export default function AdminLoginPage() {
-  return <AdminLoginClient />
+  redirect('/auth/login')
 }
