@@ -2,4 +2,17 @@ import 'server-only'
 
 import Stripe from 'stripe'
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+let stripeClient: Stripe | null = null
+
+export function getStripe() {
+  if (stripeClient) return stripeClient
+
+  const apiKey = process.env.STRIPE_SECRET_KEY
+
+  if (!apiKey) {
+    throw new Error('STRIPE_SECRET_KEY is not configured')
+  }
+
+  stripeClient = new Stripe(apiKey)
+  return stripeClient
+}
