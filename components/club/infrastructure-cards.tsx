@@ -1,10 +1,12 @@
-'use client'
-
-import { useState } from 'react'
-import { Building2, GraduationCap, Dumbbell, Megaphone, Landmark, Lock, ArrowUp, Coins } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import {
+  Building2,
+  Dumbbell,
+  GraduationCap,
+  Landmark,
+  LockKeyhole,
+  Megaphone,
+} from 'lucide-react'
+import { CurrencyDisplay } from '@/components/clan/currency-display'
 import type { ClubInfrastructure, InfrastructureCardType } from '@/lib/types'
 
 interface InfrastructureCardsProps {
@@ -17,202 +19,104 @@ const INFRASTRUCTURE_CONFIG: Record<InfrastructureCardType, {
   name: string
   description: string
   icon: React.ReactNode
-  bonusType: string
-  baseCost: number
+  capability: string
 }> = {
   stadium: {
-    name: 'Stadium',
-    description: 'Increase match earnings',
-    icon: <Building2 className="h-6 w-6" />,
-    bonusType: 'Match Bonus',
-    baseCost: 500,
+    name: 'Estádio',
+    description: 'Capacidade, bilheteira, experiência dos adeptos e elegibilidade para eventos.',
+    icon: <Building2 className="h-5 w-5" />,
+    capability: 'Receita de jogo & capacidade',
   },
   academy: {
-    name: 'Academy',
-    description: 'Develop young talent faster',
-    icon: <GraduationCap className="h-6 w-6" />,
-    bonusType: 'XP Bonus',
-    baseCost: 400,
+    name: 'Academia',
+    description: 'Scouting, watchlists e melhor acesso ao mercado primário de jogadores.',
+    icon: <GraduationCap className="h-5 w-5" />,
+    capability: 'Scouting & acesso ao mercado',
   },
   training: {
-    name: 'Training Center',
-    description: 'Boost player performance',
-    icon: <Dumbbell className="h-6 w-6" />,
-    bonusType: 'Stats Bonus',
-    baseCost: 450,
+    name: 'Centro de Treino',
+    description: 'Preparação, disponibilidade operacional e recuperação do plantel.',
+    icon: <Dumbbell className="h-5 w-5" />,
+    capability: 'Preparação & disponibilidade',
   },
   marketing: {
     name: 'Marketing',
-    description: 'Earn passive income',
-    icon: <Megaphone className="h-6 w-6" />,
-    bonusType: 'Passive Income',
-    baseCost: 600,
+    description: 'Crescimento de adeptos, alcance do clube e qualidade das propostas de patrocínio.',
+    icon: <Megaphone className="h-5 w-5" />,
+    capability: 'Adeptos & patrocinadores',
   },
   finance: {
-    name: 'Finance Office',
-    description: 'Reduce transaction fees',
-    icon: <Landmark className="h-6 w-6" />,
-    bonusType: 'Fee Reduction',
-    baseCost: 550,
+    name: 'Finanças',
+    description: 'Crédito, projeções de cash-flow, condições de financiamento e controlo financeiro.',
+    icon: <Landmark className="h-5 w-5" />,
+    capability: 'Crédito & eficiência financeira',
   },
 }
 
 const CARD_TYPES: InfrastructureCardType[] = ['stadium', 'academy', 'training', 'marketing', 'finance']
 
-export function InfrastructureCards({ infrastructure, clubId, balance }: InfrastructureCardsProps) {
-  const [upgrading, setUpgrading] = useState<string | null>(null)
-  const router = useRouter()
-
-  const getCardData = (type: InfrastructureCardType) => {
-    return infrastructure.find(i => i.card_type === type)
-  }
-
-  const getUpgradeCost = (type: InfrastructureCardType, currentLevel: number) => {
-    const base = INFRASTRUCTURE_CONFIG[type].baseCost
-    return Math.round(base * Math.pow(1.5, currentLevel))
-  }
-
-  const getBonusPercentage = (level: number) => {
-    return level * 5 // 5% per level
-  }
-
-  const handleUpgrade = async (type: InfrastructureCardType) => {
-    const card = getCardData(type)
-    const currentLevel = card?.level || 0
-    const cost = getUpgradeCost(type, currentLevel)
-
-    if (balance < cost) return
-
-    setUpgrading(type)
-    const supabase = createClient()
-
-    if (card) {
-      // Upgrade existing card
-      const { error } = await supabase
-        .from('club_infrastructure')
-        .update({ 
-          level: currentLevel + 1,
-          bonus_pct: getBonusPercentage(currentLevel + 1) / 100,
-        })
-        .eq('id', card.id)
-
-      if (!error) {
-        // Deduct cost from wallet
-        await supabase.rpc('deduct_balance', { 
-          p_user_id: (await supabase.auth.getUser()).data.user?.id,
-          p_amount: cost 
-        })
-      }
-    } else {
-      // Create new card
-      const { error } = await supabase
-        .from('club_infrastructure')
-        .insert({
-          club_id: clubId,
-          card_type: type,
-          level: 1,
-          bonus_pct: 0.05,
-        })
-
-      if (!error) {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          await supabase
-            .from('wallet')
-            .update({ balance: balance - cost })
-            .eq('user_id', user.id)
-        }
-      }
-    }
-
-    setUpgrading(null)
-    router.refresh()
-  }
+export function InfrastructureCards({ infrastructure, balance }: InfrastructureCardsProps) {
+  const getCardData = (type: InfrastructureCardType) => infrastructure.find((item) => item.card_type === type)
 
   return (
-    <div className="rounded-xl border border-border bg-card">
-      <div className="flex items-center justify-between border-b border-border p-4">
+    <section className="clan-panel-neutral rounded-2xl p-4 sm:p-5">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="font-semibold text-foreground">Club Infrastructure</h2>
-          <p className="text-sm text-muted-foreground">Upgrade your facilities to gain bonuses</p>
+          <p className="clan-kicker">Infraestruturas</p>
+          <h2 className="mt-1 text-lg font-semibold text-foreground">Capacidade operacional do clube</h2>
+          <p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">
+            Os níveis existentes são preservados. Novos upgrades económicos ficam bloqueados até serem migrados para o ledger Silver e para as novas regras de manutenção.
+          </p>
         </div>
-        <div className="flex items-center gap-2 rounded-lg bg-secondary/50 px-3 py-1.5">
-          <Coins className="h-4 w-4 text-primary" />
-          <span className="font-medium text-foreground">{balance.toLocaleString()}</span>
-          <span className="text-sm text-muted-foreground">GC</span>
-        </div>
+        <CurrencyDisplay kind="silver" amount={balance} compact label="Silver" />
       </div>
 
-      <div className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
         {CARD_TYPES.map((type) => {
           const config = INFRASTRUCTURE_CONFIG[type]
           const card = getCardData(type)
           const level = card?.level || 0
-          const isMaxLevel = level >= 5
-          const upgradeCost = getUpgradeCost(type, level)
-          const canAfford = balance >= upgradeCost
-          const isUpgrading = upgrading === type
 
           return (
-            <div
+            <article
               key={type}
-              className={`rounded-xl border p-4 transition-colors ${
-                level > 0 
-                  ? 'border-primary/30 bg-primary/5' 
-                  : 'border-border bg-secondary/20'
+              className={`group relative overflow-hidden rounded-2xl border p-4 transition ${
+                level > 0
+                  ? 'border-primary/15 bg-[rgba(245,191,22,.035)]'
+                  : 'border-white/[0.055] bg-black/15'
               }`}
             >
-              <div className="flex items-start justify-between mb-3">
-                <div className={`rounded-lg p-2 ${
-                  level > 0 ? 'bg-primary/10 text-primary' : 'bg-secondary text-muted-foreground'
+              <div className="flex items-start justify-between gap-3">
+                <span className={`flex h-10 w-10 items-center justify-center rounded-xl border ${
+                  level > 0
+                    ? 'border-primary/20 bg-primary/[0.07] text-primary'
+                    : 'border-white/[0.06] bg-white/[0.025] text-muted-foreground'
                 }`}>
                   {config.icon}
-                </div>
-                {level > 0 && (
-                  <span className="rounded bg-primary/20 px-2 py-0.5 text-xs font-medium text-primary">
-                    Lvl {level}
-                  </span>
-                )}
+                </span>
+                <span className={`rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${
+                  level > 0 ? 'bg-primary/[0.08] text-primary' : 'bg-white/[0.035] text-muted-foreground'
+                }`}>
+                  Nível {level}
+                </span>
               </div>
 
-              <h3 className="font-semibold text-foreground">{config.name}</h3>
-              <p className="text-sm text-muted-foreground mt-1">{config.description}</p>
+              <h3 className="mt-4 text-sm font-semibold text-foreground">{config.name}</h3>
+              <p className="mt-1.5 min-h-14 text-xs leading-5 text-muted-foreground">{config.description}</p>
 
-              {level > 0 && (
-                <div className="mt-3 rounded bg-secondary/50 px-2 py-1.5">
-                  <span className="text-xs text-muted-foreground">{config.bonusType}: </span>
-                  <span className="text-sm font-medium text-accent">+{getBonusPercentage(level)}%</span>
-                </div>
-              )}
-
-              <div className="mt-4">
-                {isMaxLevel ? (
-                  <div className="flex items-center justify-center gap-2 rounded-lg bg-accent/10 py-2 text-sm text-accent">
-                    <Lock className="h-4 w-4" />
-                    <span>Max Level</span>
-                  </div>
-                ) : (
-                  <Button
-                    className="w-full"
-                    variant={canAfford ? 'default' : 'outline'}
-                    disabled={!canAfford || isUpgrading}
-                    onClick={() => handleUpgrade(type)}
-                  >
-                    {isUpgrading ? (
-                      'Upgrading...'
-                    ) : (
-                      <>
-                        <ArrowUp className="h-4 w-4 mr-2" />
-                        {level === 0 ? 'Unlock' : 'Upgrade'} ({upgradeCost.toLocaleString()} GC)
-                      </>
-                    )}
-                  </Button>
-                )}
+              <div className="mt-4 border-t border-white/[0.05] pt-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-muted-foreground">Função</p>
+                <p className="mt-1 text-xs font-medium text-foreground">{config.capability}</p>
               </div>
-            </div>
+
+              <div className="mt-4 flex items-center gap-2 text-[10px] text-muted-foreground">
+                <LockKeyhole className="h-3.5 w-3.5 text-primary/70" />
+                Upgrade disponível após migração económica
+              </div>
+            </article>
           )
         })}
       </div>
-    </div>
+    </section>
   )
 }
