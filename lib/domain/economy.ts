@@ -1,5 +1,6 @@
 import type { CurrencyCode, UUID } from './core'
 
+export type FinancingPolicy = 'DISABLED' | 'LIMITED' | 'STANDARD' | 'OPEN'
 export type LedgerDirection = 'DEBIT' | 'CREDIT'
 export type LedgerScope = 'USER' | 'CLUB' | 'UNIVERSE' | 'PLATFORM'
 
