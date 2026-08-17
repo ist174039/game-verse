@@ -1,16 +1,30 @@
-import { BarChart3 } from 'lucide-react'
+import { Crown, Trophy } from 'lucide-react'
 
 export function RankingsHeader() {
   return (
-    <div className="flex items-start justify-between">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Rankings</h1>
-        <p className="text-muted-foreground">See how you stack up against other managers</p>
+    <section className="relative overflow-hidden rounded-3xl border border-primary/15 bg-[linear-gradient(135deg,rgba(245,191,22,.08),rgba(8,8,8,.96)_42%)] px-5 py-6 shadow-panel sm:px-7 sm:py-7">
+      <div className="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full border border-primary/10" />
+      <div className="pointer-events-none absolute right-5 top-5 opacity-[0.06]">
+        <Trophy className="h-36 w-36 text-primary" />
       </div>
-      <div className="flex items-center gap-2 rounded-lg bg-secondary/50 px-3 py-2">
-        <BarChart3 className="h-5 w-5 text-primary" />
-        <span className="text-sm font-medium text-foreground">Season 1</span>
+
+      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div className="mb-2 flex items-center gap-2">
+            <Crown className="h-4 w-4 text-primary" />
+            <span className="clan-kicker">Competição</span>
+          </div>
+          <h1 className="clan-display text-3xl text-foreground sm:text-4xl">Ranking</h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+            Acompanha a força competitiva dos managers. O ranking atual ainda usa o Elo legado até ser migrado para ranking por clube e universo.
+          </p>
+        </div>
+
+        <div className="inline-flex items-center gap-2 self-start rounded-full border border-primary/15 bg-primary/[0.06] px-3 py-1.5 text-xs font-semibold text-primary sm:self-auto">
+          <Trophy className="h-3.5 w-3.5" />
+          Temporada atual
+        </div>
       </div>
-    </div>
+    </section>
   )
 }
