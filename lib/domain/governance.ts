@@ -3,6 +3,7 @@ import type { ISODateTime, UUID } from './core'
 export type InternalRole = 'super_admin' | 'platform_admin' | 'economy_admin' | 'competition_admin' | 'moderator' | 'support_agent' | 'finance_operator' | 'read_only_analyst'
 export type TicketStatus = 'OPEN' | 'IN_PROGRESS' | 'WAITING_USER' | 'WAITING_INTERNAL' | 'RESOLVED' | 'CLOSED'
 export type CaseStatus = 'OPEN' | 'INVESTIGATING' | 'ACTION_REQUIRED' | 'RESOLVED' | 'DISMISSED'
+export type FreezeScope = 'USER' | 'CLUB' | 'UNIVERSE'
 
 export interface SupportTicket {
   id: UUID
@@ -18,6 +19,15 @@ export interface SupportTicket {
   metadata: Record<string, unknown>
   createdAt: ISODateTime
   updatedAt: ISODateTime
+}
+
+export interface TicketNote {
+  id: UUID
+  ticketId: UUID
+  authorUserId: UUID | null
+  internal: boolean
+  body: string
+  createdAt: ISODateTime
 }
 
 export interface ModerationCase {
@@ -36,6 +46,41 @@ export interface ModerationCase {
   signals: Record<string, unknown>
   resolution: Record<string, unknown> | null
   createdAt: ISODateTime
+  updatedAt: ISODateTime
+}
+
+export interface EconomicFreeze {
+  id: UUID
+  scope: FreezeScope
+  userId: UUID | null
+  clubId: UUID | null
+  universeId: UUID | null
+  reason: string
+  caseId: UUID | null
+  active: boolean
+  createdBy: UUID | null
+  createdAt: ISODateTime
+  releasedBy: UUID | null
+  releasedAt: ISODateTime | null
+}
+
+export interface FeatureFlag {
+  key: string
+  enabled: boolean
+  scope: 'GLOBAL' | 'ENVIRONMENT' | 'UNIVERSE' | 'COHORT'
+  scopeReference: string | null
+  configuration: Record<string, unknown>
+  updatedBy: UUID | null
+  updatedAt: ISODateTime
+}
+
+export interface PlatformConfig {
+  key: string
+  category: string
+  value: unknown
+  version: number
+  effectiveFrom: ISODateTime
+  updatedBy: UUID | null
   updatedAt: ISODateTime
 }
 

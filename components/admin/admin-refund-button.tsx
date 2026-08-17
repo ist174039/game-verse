@@ -1,0 +1,9 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { RotateCcw } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog'
+
+export function AdminRefundButton({orderId,amountLabel}:{orderId:string;amountLabel:string}){const router=useRouter();const[open,setOpen]=useState(false);const[reason,setReason]=useState('');const[loading,setLoading]=useState(false);const[error,setError]=useState<string|null>(null);async function execute(){if(reason.trim().length<5){setError('Indica um motivo com pelo menos 5 caracteres.');return}setLoading(true);setError(null);try{const r=await fetch('/api/admin/refund',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({orderId,reason:reason.trim(),idempotencyKey:crypto.randomUUID()})});const p=await r.json();if(!r.ok)throw new Error(p.error||'refund_failed');setOpen(false);setReason('');router.refresh()}catch(e){setError(e instanceof Error?e.message:'refund_failed')}finally{setLoading(false)}}return <><Button size="sm" variant="outline" onClick={()=>{setError(null);setOpen(true)}}><RotateCcw className="mr-1.5 h-3.5 w-3.5"/>Refund</Button><ConfirmationDialog open={open} onOpenChange={o=>{if(!loading)setOpen(o)}} title="Iniciar refund Stripe" description={`Será pedido o refund do valor restante (${amountLabel}). O Gold não é removido automaticamente; fica pendente de reconciliação.`} confirmLabel="Confirmar refund" tone="danger" isLoading={loading} onConfirm={execute}><label className="text-xs font-bold text-muted-foreground">Motivo obrigatório</label><textarea value={reason} onChange={e=>setReason(e.target.value)} rows={4} className="mt-2 w-full resize-none rounded-xl border border-white/[.08] bg-[#111] px-3.5 py-3 text-sm outline-none focus:border-primary/55"/>{error&&<p className="mt-2 text-xs text-destructive">{error}</p>}</ConfirmationDialog></>}

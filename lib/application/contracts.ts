@@ -5,7 +5,7 @@ import type { CompetitionParticipant, LeagueStanding, MatchDispute, MatchSettlem
 import type { ClubLoan, FinancialCycle, GoldToSilverFinancingReceipt, InfrastructureType, InfrastructureUpgradeReceipt, LoanRepaymentReceipt, SponsorshipContract } from '@/lib/domain/club-economy'
 import type { AchievementDefinition, BronzeStoreItem, DailyRewardClaim, MissionDefinition, UserAchievement, UserMission } from '@/lib/domain/retention'
 import type { JournalArticle, Notification } from '@/lib/domain/communications'
-import type { AdminAuditLog, ModerationCase, SupportTicket } from '@/lib/domain/governance'
+import type { AdminAuditLog, CaseStatus, EconomicFreeze, FeatureFlag, FreezeScope, ModerationCase, PlatformConfig, SupportTicket, TicketNote, TicketStatus } from '@/lib/domain/governance'
 import type { ChatMessage, Community, CommunityPost, DirectConversation } from '@/lib/domain/social'
 import type { ClubLiability, CompetitionRegistration, MatchFinancialEvent } from '@/lib/domain/operations'
 
@@ -20,5 +20,19 @@ export interface ClubEconomyRepository { listSponsorships(clubId: UUID): Promise
 export interface RetentionRepository { listActiveMissions(userId: UUID): Promise<Array<{ definition: MissionDefinition; progress: UserMission | null }>>; claimDailyReward(): Promise<DailyRewardClaim>; listAchievements(userId: UUID): Promise<Array<{ definition: AchievementDefinition; unlocked: UserAchievement | null }>>; listBronzeStore(): Promise<BronzeStoreItem[]> }
 export interface CommunicationRepository { listJournal(universeId: UUID, limit?: number): Promise<JournalArticle[]>; listNotifications(userId: UUID, limit?: number): Promise<Notification[]>; markNotificationRead(notificationId: UUID): Promise<void> }
 export interface SocialRepository { listCommunities(userId: UUID): Promise<Community[]>; listCommunityPosts(communityId: UUID, limit?: number): Promise<CommunityPost[]>; listConversations(userId: UUID): Promise<DirectConversation[]>; listMessages(conversationId: UUID, limit?: number): Promise<ChatMessage[]> }
-export interface GovernanceRepository { listTickets(limit?: number): Promise<SupportTicket[]>; listModerationCases(limit?: number): Promise<ModerationCase[]>; listAuditLog(limit?: number): Promise<AdminAuditLog[]>; reverseMatchSettlement(input: { matchId: UUID; reason: string; idempotencyKey: string }): Promise<Record<string, unknown>>; reverseLedgerTransaction(input: { transactionId: UUID; reason: string; idempotencyKey: string }): Promise<UUID> }
+export interface GovernanceRepository {
+  listTickets(limit?: number): Promise<SupportTicket[]>
+  listModerationCases(limit?: number): Promise<ModerationCase[]>
+  listAuditLog(limit?: number): Promise<AdminAuditLog[]>
+  updateTicket(input: { ticketId: UUID; status: TicketStatus; assignedAdminId: UUID | null; actorUserId: UUID; reason: string }): Promise<SupportTicket>
+  addTicketNote(input: { ticketId: UUID; body: string; internal: boolean; actorUserId: UUID }): Promise<TicketNote>
+  updateModerationCase(input: { caseId: UUID; status: CaseStatus; assignedAdminId: UUID | null; resolution: Record<string, unknown> | null; actorUserId: UUID; reason: string }): Promise<ModerationCase>
+  createEconomicFreeze(input: { scope: FreezeScope; targetId: UUID; reason: string; caseId: UUID | null; actorUserId: UUID }): Promise<EconomicFreeze>
+  releaseEconomicFreeze(input: { freezeId: UUID; actorUserId: UUID; reason: string }): Promise<EconomicFreeze>
+  setFeatureFlag(input: { key: string; enabled: boolean; scope: FeatureFlag['scope']; scopeReference: string | null; configuration: Record<string, unknown>; actorUserId: UUID; reason: string }): Promise<FeatureFlag>
+  setPlatformConfig(input: { key: string; category: string; value: unknown; effectiveFrom: string | null; actorUserId: UUID; reason: string; ticketId?: UUID | null }): Promise<PlatformConfig>
+  markPaymentRefundPending(input: { orderId: UUID; actorUserId: UUID; reason: string; stripeRefundId: string }): Promise<void>
+  reverseMatchSettlement(input: { matchId: UUID; reason: string; idempotencyKey: string }): Promise<Record<string, unknown>>
+  reverseLedgerTransaction(input: { transactionId: UUID; reason: string; idempotencyKey: string }): Promise<UUID>
+}
 export interface OperationsRepository { listClubLiabilities(clubId: UUID): Promise<ClubLiability[]>; listMatchFinancialEvents(clubId: UUID, limit?: number): Promise<MatchFinancialEvent[]> }
