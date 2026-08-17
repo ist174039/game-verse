@@ -1,18 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { stripe } from '@/lib/stripe'
+import { getStripe } from '@/lib/stripe'
 import { createClient } from '@/lib/supabase/server'
 
 export async function POST(req: NextRequest) {
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+  const sig = req.headers.get('stripe-signature')
+
+  if (!webhookSecret) {
+    return NextResponse.json(
+      { error: 'Stripe webhook is not configured' },
+      { status: 503 },
+    )
+  }
+
+  if (!sig) {
+    return NextResponse.json(
+      { error: 'Missing Stripe signature' },
+      { status: 400 },
+    )
+  }
+
   const buf = await req.text()
-  const sig = req.headers.get('stripe-signature')!
 
   let event
   try {
-    event = stripe.webhooks.constructEvent(
-      buf,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET!,
-    )
+    const stripe = getStripe()
+    event = stripe.webhooks.constructEvent(buf, sig, webhookSecret)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Signature verification failed'
     return NextResponse.json({ error: message }, { status: 400 })
@@ -23,7 +36,6 @@ export async function POST(req: NextRequest) {
       const session = event.data.object as any
       const supabase = await createClient()
 
-      // Find fiat_transaction by stripe_session_id
       const { data: fiatTx } = await supabase
         .from('fiat_transaction')
         .select('*')
@@ -31,7 +43,6 @@ export async function POST(req: NextRequest) {
         .single()
 
       if (fiatTx) {
-        // Update transaction to completed
         await supabase
           .from('fiat_transaction')
           .update({
@@ -41,7 +52,6 @@ export async function POST(req: NextRequest) {
           })
           .eq('id', fiatTx.id)
 
-        // Grant coins
         const { error: creditError } = await supabase.rpc('credit_gc', {
           p_user_id: fiatTx.user_id,
           p_amount: fiatTx.gc_amount,
