@@ -8,14 +8,15 @@ import { QuickActions } from '@/components/dashboard/quick-actions'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
-
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   if (!user) {
     redirect('/auth/login')
   }
 
-  // Fetch dashboard data in parallel (first batch)
+  // Transitional adapter: the current database is still the legacy GameVerse schema.
+  // The visual layer is already aligned with Clã das Sombras; these reads will be
+  // replaced by the new universe/club/ledger model when the definitive Supabase is connected.
   const [profileResult, clubResult, walletResult, transactionsResult] = await Promise.all([
     supabase.from('user_profile').select('*').eq('id', user.id).single(),
     supabase.from('club').select('*').eq('user_id', user.id).single(),
@@ -23,8 +24,7 @@ export default async function DashboardPage() {
     supabase.from('coin_transaction').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
   ])
 
-  // Fetch infrastructure after club data is available
-  const infraResult = clubResult.data?.id 
+  const infraResult = clubResult.data?.id
     ? await supabase.from('club_infrastructure').select('*').eq('club_id', clubResult.data.id).limit(5)
     : { data: [] }
 
@@ -35,32 +35,31 @@ export default async function DashboardPage() {
   const infrastructure = infraResult.data || []
 
   return (
-    <div className="space-y-6">
-      <DashboardHeader 
-        username={profile?.username || 'Manager'} 
+    <div className="space-y-5 sm:space-y-6">
+      <DashboardHeader
+        username={profile?.username || 'Manager'}
         isNewUser={profile?.is_new_user || false}
       />
-      
-      <StatsCards 
-        balance={wallet?.balance || 0}
+
+      <ClubOverview club={club} infrastructure={infrastructure} />
+
+      <StatsCards
+        silver={wallet?.balance || 0}
+        gold={0}
+        bronze={0}
         eloRating={profile?.elo_rating || 1200}
         prestigeLevel={profile?.prestige_level || 1}
         gamesPlayed={profile?.games_played_valid || 0}
       />
-      
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
-          <ClubOverview 
-            club={club}
-            infrastructure={infrastructure}
-          />
+
+      <section className="grid gap-5 xl:grid-cols-[1.25fr_.75fr]">
+        <div className="min-w-0">
           <RecentActivity transactions={transactions} />
         </div>
-        
-        <div>
+        <div className="min-w-0">
           <QuickActions />
         </div>
-      </div>
+      </section>
     </div>
   )
 }
