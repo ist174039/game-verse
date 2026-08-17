@@ -1,5 +1,6 @@
 import type { Club, Competition, Match, MarketListing, PlayerMaster, Season, Universe, UniverseMembership, UniversePlayer, UserProfile, UUID } from '@/lib/domain/core'
 import type { LedgerTransaction } from '@/lib/domain/economy'
+import type { AuctionBid, PlayerProviderSnapshot, TransferReceipt, UniversePlayerValuation } from '@/lib/domain/player-market'
 
 export interface IdentityRepository {
   getProfile(userId: UUID): Promise<UserProfile | null>
@@ -22,6 +23,8 @@ export interface PlayerRepository {
   getMaster(id: UUID): Promise<PlayerMaster | null>
   getUniversePlayer(id: UUID): Promise<UniversePlayer | null>
   listClubSquad(clubId: UUID): Promise<UniversePlayer[]>
+  listProviderSnapshots(playerId: UUID): Promise<PlayerProviderSnapshot[]>
+  listValuations(universePlayerId: UUID): Promise<UniversePlayerValuation[]>
 }
 
 export interface CompetitionRepository {
@@ -32,6 +35,13 @@ export interface CompetitionRepository {
 
 export interface MarketRepository {
   getListing(id: UUID): Promise<MarketListing | null>
+  listActive(universeId: UUID): Promise<MarketListing[]>
+  listBids(listingId: UUID): Promise<AuctionBid[]>
+  createDirectListing(input: { universePlayerId: UUID; askingPrice: number; idempotencyKey: string }): Promise<MarketListing>
+  buyDirectListing(input: { listingId: UUID; idempotencyKey: string }): Promise<TransferReceipt>
+  placeAuctionBid(input: { listingId: UUID; amount: number; idempotencyKey: string }): Promise<AuctionBid>
+  settleAuction(input: { listingId: UUID; idempotencyKey: string }): Promise<TransferReceipt>
+  cancelListing(input: { listingId: UUID; idempotencyKey: string }): Promise<void>
 }
 
 export interface LedgerRepository {
