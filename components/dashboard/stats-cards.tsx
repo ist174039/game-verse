@@ -1,79 +1,92 @@
-import { Coins, Gamepad2, Medal, ShieldCheck } from 'lucide-react'
+import { Crown, Medal, ShieldCheck, Trophy } from 'lucide-react'
+import { CurrencyDisplay } from '@/components/clan/currency-display'
 
 interface StatsCardsProps {
-  balance: number
+  silver: number
+  gold?: number
+  bronze?: number
   eloRating: number
   prestigeLevel: number
   gamesPlayed: number
 }
 
-export function StatsCards({ balance, eloRating, prestigeLevel, gamesPlayed }: StatsCardsProps) {
-  const stats = [
-    {
-      label: 'Saldo atual',
-      value: balance.toLocaleString('pt-PT'),
-      icon: Coins,
-      suffix: 'legacy',
-      hint: 'Será migrado para Gold / Silver / Bronze',
-    },
-    {
-      label: 'Rating competitivo',
-      value: eloRating.toLocaleString('pt-PT'),
-      icon: Medal,
-      suffix: getRankFromElo(eloRating),
-      hint: 'Classificação competitiva atual',
-    },
-    {
-      label: 'Prestígio',
-      value: prestigeLevel.toString(),
-      icon: ShieldCheck,
-      suffix: getPrestigeName(prestigeLevel),
-      hint: 'Progressão e reputação do clube',
-    },
-    {
-      label: 'Jogos disputados',
-      value: gamesPlayed.toLocaleString('pt-PT'),
-      icon: Gamepad2,
-      suffix: 'partidas',
-      hint: 'Histórico competitivo validado',
-    },
-  ]
-
+export function StatsCards({
+  silver,
+  gold = 0,
+  bronze = 0,
+  eloRating,
+  prestigeLevel,
+  gamesPlayed,
+}: StatsCardsProps) {
   return (
-    <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {stats.map((stat, index) => {
-        const Icon = stat.icon
-        return (
-          <article
-            key={stat.label}
-            className="group relative overflow-hidden rounded-2xl border border-border/80 bg-card/75 p-5 shadow-panel backdrop-blur-md transition duration-200 hover:-translate-y-0.5 hover:border-primary/35"
-          >
-            <div className="pointer-events-none absolute right-0 top-0 h-24 w-24 bg-[radial-gradient(circle_at_top_right,oklch(0.73_0.16_78/0.13),transparent_70%)] opacity-70 transition-opacity group-hover:opacity-100" />
-            <div className="relative flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  {stat.label}
-                </p>
-                <div className="mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                  <span className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-                    {stat.value}
-                  </span>
-                  <span className="text-xs font-medium text-primary">{stat.suffix}</span>
-                </div>
-                <p className="mt-2 text-xs leading-5 text-muted-foreground">{stat.hint}</p>
-              </div>
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 text-primary shadow-[0_0_22px_oklch(0.73_0.16_78/0.08)]">
-                <Icon className="h-5 w-5" />
-              </div>
-            </div>
-            <div className="relative mt-4 h-px bg-gradient-to-r from-primary/35 via-border to-transparent" />
-            <div className="relative mt-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground/70">
-              0{index + 1} · Clã das Sombras
-            </div>
-          </article>
-        )
-      })}
+    <section className="grid gap-4 xl:grid-cols-[1.25fr_.75fr]">
+      <div className="clan-panel-neutral rounded-2xl p-4 sm:p-5">
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <div>
+            <p className="clan-kicker">Recursos</p>
+            <h2 className="mt-1 text-lg font-semibold text-foreground">Tesouraria</h2>
+          </div>
+          <p className="hidden max-w-xs text-right text-xs leading-5 text-muted-foreground sm:block">
+            Gold e Bronze passam a usar o ledger global; o saldo atual é apresentado como Silver durante a migração.
+          </p>
+        </div>
+        <div className="grid gap-2.5 sm:grid-cols-3">
+          <CurrencyDisplay kind="gold" amount={gold} />
+          <CurrencyDisplay kind="silver" amount={silver} label="Silver" />
+          <CurrencyDisplay kind="bronze" amount={bronze} />
+        </div>
+      </div>
+
+      <div className="clan-panel-neutral rounded-2xl p-4 sm:p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <Crown className="h-4 w-4 text-primary" />
+          <p className="clan-kicker">Competição</p>
+        </div>
+        <div className="grid grid-cols-3 divide-x divide-white/[0.06]">
+          <Metric
+            icon={<Medal className="h-4 w-4" />}
+            label="Elo"
+            value={eloRating.toLocaleString('pt-PT')}
+            helper={getRankFromElo(eloRating)}
+          />
+          <Metric
+            icon={<ShieldCheck className="h-4 w-4" />}
+            label="Prestígio"
+            value={prestigeLevel.toLocaleString('pt-PT')}
+            helper={getPrestigeName(prestigeLevel)}
+          />
+          <Metric
+            icon={<Trophy className="h-4 w-4" />}
+            label="Jogos"
+            value={gamesPlayed.toLocaleString('pt-PT')}
+            helper="validados"
+          />
+        </div>
+      </div>
     </section>
+  )
+}
+
+function Metric({
+  icon,
+  label,
+  value,
+  helper,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: string
+  helper: string
+}) {
+  return (
+    <div className="min-w-0 px-3 first:pl-0 last:pr-0 sm:px-4">
+      <div className="mb-3 flex items-center gap-2 text-primary">
+        {icon}
+        <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">{label}</span>
+      </div>
+      <p className="text-xl font-bold tabular-nums tracking-tight text-foreground sm:text-2xl">{value}</p>
+      <p className="mt-1 truncate text-[11px] text-muted-foreground">{helper}</p>
+    </div>
   )
 }
 
