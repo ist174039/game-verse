@@ -22,6 +22,7 @@ import { SupabaseClubOverviewReadRepository } from './club-overview-read-reposit
 import { SupabaseProfileReadRepository, SupabaseRankingsReadRepository } from './profile-rankings-read-repositories'
 import { SupabaseEconomyReadRepository } from './economy-read-repository'
 import { SupabaseGoldCatalogReadRepository } from './gold-catalog-read-repository'
+import { SupabaseAdminPlatformOverviewReadRepository } from './admin-platform-overview-read-repository'
 
 export function createApplicationServices(client: SupabaseClient): ApplicationServices {
   return {
@@ -29,4 +30,4 @@ export function createApplicationServices(client: SupabaseClient): ApplicationSe
     reads: { dashboard: new SupabaseDashboardReadRepository(client), onboarding: new SupabaseOnboardingReadRepository(client), universeOverview: new SupabaseUniverseOverviewReadRepository(client), universeDirectory: new SupabaseUniverseDirectoryReadRepository(client), squad: new SupabaseSquadReadRepository(client), market: new SupabaseMarketReadRepository(client), competitionHub: new SupabaseCompetitionHubReadRepository(client), competitionDetail: new SupabaseCompetitionDetailReadRepository(client), clubOverview: new SupabaseClubOverviewReadRepository(client), profile: new SupabaseProfileReadRepository(client), rankings: new SupabaseRankingsReadRepository(client), economy: new SupabaseEconomyReadRepository(client), goldCatalog: new SupabaseGoldCatalogReadRepository(client) },
   }
 }
-export function createAdminApplicationServices(userClient: SupabaseClient, serviceClient: SupabaseClient): AdminApplicationServices { return { ...createApplicationServices(userClient), governance: new SupabaseGovernanceRepository(serviceClient) } }
+export function createAdminApplicationServices(userClient: SupabaseClient, serviceClient: SupabaseClient): AdminApplicationServices { return { ...createApplicationServices(userClient), governance: new SupabaseGovernanceRepository(serviceClient), adminReads: { overview: new SupabaseAdminPlatformOverviewReadRepository(serviceClient) } } }
