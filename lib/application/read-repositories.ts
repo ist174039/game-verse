@@ -1,4 +1,4 @@
-import type { ClubOverviewReadModel, CompetitionDetailReadModel, CompetitionHubReadModel, DashboardReadModel, EconomyReadModel, GoldCatalogReadModel, MarketReadModel, OnboardingReadModel, ProfileReadModel, RankingsReadModel, SquadReadModel, UniverseDirectoryReadModel, UniverseOverviewReadModel } from './read-models'
+import type { AdminPlatformOverviewReadModel, ClubOverviewReadModel, CompetitionDetailReadModel, CompetitionHubReadModel, DashboardReadModel, EconomyReadModel, GoldCatalogReadModel, MarketReadModel, OnboardingReadModel, ProfileReadModel, RankingsReadModel, SquadReadModel, UniverseDirectoryReadModel, UniverseOverviewReadModel } from './read-models'
 import type { UUID } from '@/lib/domain/core'
 
 export interface DashboardReadRepository { load(userId: UUID, universeId: UUID): Promise<DashboardReadModel | null> }
@@ -14,3 +14,4 @@ export interface ProfileReadRepository { load(profileUserId: UUID): Promise<Prof
 export interface RankingsReadRepository { load(userId: UUID, universeId: UUID): Promise<RankingsReadModel | null> }
 export interface EconomyReadRepository { load(userId: UUID, universeId: UUID): Promise<EconomyReadModel | null> }
 export interface GoldCatalogReadRepository { load(userId: UUID): Promise<GoldCatalogReadModel> }
+export interface AdminPlatformOverviewReadRepository { load(): Promise<AdminPlatformOverviewReadModel> }

@@ -4,6 +4,7 @@ import type { CompetitionParticipant, CompetitionRound, LeagueStanding } from '@
 import type { JournalArticle, Notification } from '@/lib/domain/communications'
 import type { ClubLiability, CompetitionDivision, CompetitionRegistration, CupTie } from '@/lib/domain/operations'
 import type { GoldPackage, PaymentOrder } from '@/lib/domain/payments'
+import type { AdminAuditLog, ModerationCase, SupportTicket } from '@/lib/domain/governance'
 
 export interface DashboardReadModel { user: UserProfile; universe: Universe; club: Club; currencies: { gold: number; bronze: number; silver: number }; nextMatch: Match | null; recentMatches: Match[]; standings: LeagueStanding[]; activeMarketListings: MarketListing[]; economy: { sponsorships: SponsorshipContract[]; loans: ClubLoan[]; liabilities: ClubLiability[]; latestCycle: FinancialCycle | null }; communications: { journal: JournalArticle[]; notifications: Notification[] } }
 export interface UniverseOverviewReadModel { universe: Universe; club: Club | null; participantCompetitions: CompetitionParticipant[] }
@@ -30,3 +31,24 @@ export interface EconomyLedgerMovementReadModel { entryId: UUID; transactionId: 
 export interface EconomyReadModel { universe: Universe; club: Club; balances: { gold: number; bronze: number; silver: number }; sponsorships: SponsorshipContract[]; loans: ClubLoan[]; liabilities: ClubLiability[]; cycles: FinancialCycle[]; movements: EconomyLedgerMovementReadModel[]; totals: { activeLoanPrincipal: number; openLiabilities: number; activeSponsorshipPeriodicIncome: number; latestCycleNetResult: number | null } }
 export interface GoldCatalogReadModel { balance: number; packages: GoldPackage[]; recentOrders: PaymentOrder[] }
 export interface OnboardingReadModel { userId: UUID; profileReady: boolean; availableUniverses: Universe[]; existingClubUniverseIds: UUID[]; nextStep: 'IDENTITY' | 'UNIVERSE' | 'CLUB' | 'COMPLETE' }
+
+export interface AdminRecentUserReadModel { id: UUID; username: string; managerLevel: number; reputation: number; createdAt: string }
+export interface AdminUniverseReadModel { id: UUID; name: string; kind: string; state: string; accessPolicy: string; economicProfile: string; financingPolicy: string; createdAt: string }
+export interface AdminPaymentOrderReadModel { id: UUID; userId: UUID; status: string; amountCents: number; currency: string; goldAmount: number; refundedCents: number; createdAt: string }
+export interface AdminFeatureFlagReadModel { key: string; enabled: boolean; scope: string; scopeReference: string | null; updatedAt: string }
+export interface AdminConfigReadModel { key: string; category: string; version: number; effectiveFrom: string; updatedAt: string }
+export interface AdminPlatformOverviewReadModel {
+  metrics: {
+    users: number; clubs: number; universes: number; activeUniverses: number; competitions: number; unsettledMatches: number;
+    activeListings: number; openTickets: number; criticalTickets: number; openModerationCases: number; activeFreezes: number;
+    pendingPayments: number; refundQueue: number; enabledFeatureFlags: number; totalFeatureFlags: number;
+  }
+  recentUsers: AdminRecentUserReadModel[]
+  universes: AdminUniverseReadModel[]
+  payments: AdminPaymentOrderReadModel[]
+  tickets: SupportTicket[]
+  moderationCases: ModerationCase[]
+  featureFlags: AdminFeatureFlagReadModel[]
+  configs: AdminConfigReadModel[]
+  auditLog: AdminAuditLog[]
+}
