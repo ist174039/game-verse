@@ -1,35 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { Coins, User, Loader2, ShoppingCart, Star, Zap, Flame, Gem } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { Coins, LockKeyhole, Shield, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
 import type { MarketListingWithSeller } from '@/lib/types'
-
-const rarityConfig: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
-  common: {
-    color: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
-    icon: <Star className="h-3 w-3" />,
-    label: 'Common',
-  },
-  rare: {
-    color: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    icon: <Zap className="h-3 w-3" />,
-    label: 'Rare',
-  },
-  epic: {
-    color: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-    icon: <Flame className="h-3 w-3" />,
-    label: 'Epic',
-  },
-  legendary: {
-    color: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
-    icon: <Gem className="h-3 w-3" />,
-    label: 'Legendary',
-  },
-}
 
 interface MarketListingCardProps {
   listing: MarketListingWithSeller
@@ -38,121 +11,48 @@ interface MarketListingCardProps {
 }
 
 export function MarketListingCard({ listing, userId, canDelete }: MarketListingCardProps) {
-  const [isBuying, setIsBuying] = useState(false)
-  const router = useRouter()
-  const rarity = rarityConfig[listing.card_rarity] || rarityConfig.common
-
-  const handleBuy = async () => {
-    setIsBuying(true)
-    const supabase = createClient()
-
-    try {
-      // Check balance
-      const { data: wallet } = await supabase
-        .from('wallet')
-        .select('balance')
-        .eq('user_id', userId)
-        .single()
-
-      if (!wallet || wallet.balance < listing.price) {
-        alert('Insufficient balance!')
-        setIsBuying(false)
-        return
-      }
-
-      // Deduct balance and mark as sold
-      const { error: buyError } = await supabase.rpc('buy_market_listing', {
-        p_listing_id: listing.id,
-        p_buyer_id: userId,
-      })
-
-      if (buyError) throw buyError
-      router.refresh()
-    } catch {
-      alert('Failed to complete purchase. Please try again.')
-    } finally {
-      setIsBuying(false)
-    }
-  }
-
-  const handleCancel = async () => {
-    const supabase = createClient()
-    await supabase
-      .from('market_listing')
-      .update({ status: 'cancelled' })
-      .eq('id', listing.id)
-    router.refresh()
-  }
+  const isOwner = listing.seller_id === userId || canDelete
 
   return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden transition-all hover:border-primary/20 hover:shadow-sm">
-      {/* Card Image Area */}
-      <div className="aspect-[4/3] bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center p-4">
-        <div className={`rounded-2xl p-4 ${rarity.color.replace('text-', 'bg-').replace('border-', '')}`}>
-          {rarity.icon}
+    <article className="group overflow-hidden rounded-2xl border border-white/[0.07] bg-[#0b0b0b] transition duration-200 hover:-translate-y-0.5 hover:border-primary/20">
+      <div className="relative aspect-[4/3] overflow-hidden bg-[radial-gradient(circle_at_50%_35%,rgba(245,191,22,.09),transparent_38%),linear-gradient(180deg,#111,#080808)]">
+        <div className="absolute inset-5 rounded-[28px] border border-primary/15" />
+        <div className="absolute inset-9 rounded-[24px] border border-white/[0.06]" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="flex h-24 w-20 flex-col items-center justify-center rounded-xl border border-primary/25 bg-black/60 shadow-[0_0_36px_rgba(245,191,22,.08)]">
+            <Shield className="h-8 w-8 text-primary" />
+            <span className="mt-2 text-[9px] font-bold uppercase tracking-[0.18em] text-primary/80">Asset</span>
+          </div>
         </div>
+        <span className="absolute left-4 top-4 rounded-md border border-white/[0.08] bg-black/65 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Legacy listing</span>
       </div>
 
-      {/* Card Info */}
-      <div className="p-4 space-y-3">
-        <div className="flex items-start justify-between">
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="truncate text-base font-bold text-foreground">{listing.card_name}</h3>
+            <p className="mt-1 truncate text-xs uppercase tracking-[0.12em] text-muted-foreground">{listing.card_type || 'Ativo de mercado'}</p>
+          </div>
+          <span className="rounded-md border border-primary/15 bg-primary/[0.05] px-2 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-primary">{listing.card_rarity}</span>
+        </div>
+
+        {listing.description && <p className="mt-3 line-clamp-2 min-h-10 text-xs leading-5 text-muted-foreground">{listing.description}</p>}
+
+        <div className="mt-4 flex items-center gap-2 border-t border-white/[0.06] pt-3 text-xs text-muted-foreground">
+          <User className="h-3.5 w-3.5" />
+          <span className="truncate">{listing.seller?.username || 'Vendedor indisponível'}</span>
+        </div>
+
+        <div className="mt-4 flex items-end justify-between gap-3">
           <div>
-            <h3 className="font-semibold text-foreground">{listing.card_name}</h3>
-            {listing.card_type && (
-              <p className="text-xs text-muted-foreground">{listing.card_type}</p>
-            )}
+            <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Preço de referência</p>
+            <div className="mt-1 flex items-center gap-1.5"><Coins className="h-4 w-4 text-[var(--silver)]" /><span className="text-lg font-black tabular-nums">{listing.price.toLocaleString('pt-PT')}</span><span className="text-[10px] font-semibold text-[var(--silver)]">Silver</span></div>
           </div>
-          <Badge variant="outline" className={`${rarity.color} text-xs`}>
-            <span className="flex items-center gap-1">
-              {rarity.icon}
-              {rarity.label}
-            </span>
-          </Badge>
-        </div>
-
-        {listing.description && (
-          <p className="text-xs text-muted-foreground line-clamp-2">{listing.description}</p>
-        )}
-
-        {/* Seller */}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <User className="h-3 w-3" />
-          <span>{listing.seller?.username || 'Unknown Seller'}</span>
-        </div>
-
-        {/* Price & Action */}
-        <div className="flex items-center justify-between pt-2 border-t border-border">
-          <div className="flex items-center gap-1">
-            <Coins className="h-4 w-4 text-primary" />
-            <span className="font-bold text-foreground">{listing.price.toLocaleString()}</span>
-            <span className="text-xs text-muted-foreground">GC</span>
-          </div>
-
-          {listing.seller_id === userId || canDelete ? (
-            <Button
-              size="sm"
-              variant="destructive"
-              onClick={handleCancel}
-            >
-              Cancel
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={handleBuy}
-              disabled={isBuying}
-            >
-              {isBuying ? (
-                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-              ) : (
-                <ShoppingCart className="h-3 w-3 mr-1" />
-              )}
-              Buy
-            </Button>
-          )}
+          <Button size="sm" disabled title="Ativado com o novo ledger Silver">
+            <LockKeyhole className="mr-1.5 h-3.5 w-3.5" />{isOwner ? 'Gerir' : 'Comprar'}
+          </Button>
         </div>
       </div>
-    </div>
+    </article>
   )
 }
