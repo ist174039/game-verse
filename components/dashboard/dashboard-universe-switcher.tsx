@@ -1,0 +1,5 @@
+import Link from 'next/link'
+import { Crown, Globe2 } from 'lucide-react'
+import type { UniverseDirectoryEntry } from '@/lib/application/read-models'
+
+export function DashboardUniverseSwitcher({entries,activeUniverseId}:{entries:UniverseDirectoryEntry[];activeUniverseId:string}){const owned=entries.filter(e=>e.club);if(owned.length<=1)return null;return <section className="overflow-x-auto rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-2"><div className="flex min-w-max gap-1">{owned.map(entry=>{const active=entry.universe.id===activeUniverseId;const Icon=entry.universe.kind==='MAIN'?Crown:Globe2;return <Link key={entry.universe.id} href={`/dashboard?universe=${entry.universe.id}`} className={`inline-flex h-10 items-center gap-2 rounded-xl px-3 text-xs font-bold transition ${active?'bg-primary/[.10] text-primary':'text-muted-foreground hover:bg-white/[.04] hover:text-foreground'}`}><Icon className="h-3.5 w-3.5"/>{entry.universe.name}<span className="text-[9px] font-medium opacity-70">{entry.club?.name}</span></Link>})}</div></section>}

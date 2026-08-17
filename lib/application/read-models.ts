@@ -6,7 +6,33 @@ import type { ClubLiability, CompetitionDivision, CompetitionRegistration, CupTi
 import type { GoldPackage, PaymentOrder } from '@/lib/domain/payments'
 import type { AdminAuditLog, ModerationCase, SupportTicket } from '@/lib/domain/governance'
 
-export interface DashboardReadModel { user: UserProfile; universe: Universe; club: Club; currencies: { gold: number; bronze: number; silver: number }; nextMatch: Match | null; recentMatches: Match[]; standings: LeagueStanding[]; activeMarketListings: MarketListing[]; economy: { sponsorships: SponsorshipContract[]; loans: ClubLoan[]; liabilities: ClubLiability[]; latestCycle: FinancialCycle | null }; communications: { journal: JournalArticle[]; notifications: Notification[] } }
+export interface DashboardNextMatchReadModel { match: Match; homeClubName: string; awayClubName: string; competitionName: string | null }
+export interface DashboardOperationalReadModel {
+  squadSize: number
+  infrastructureCount: number
+  registeredCompetitions: number
+  activeCompetitions: number
+  availableCompetitions: number
+  sponsorshipOffers: number
+  activeMarketListings: number
+  openLiabilities: number
+  unreadNotifications: number
+  settledMatches: number
+}
+export interface DashboardReadModel {
+  user: UserProfile
+  universe: Universe
+  club: Club
+  currencies: { gold: number; bronze: number; silver: number }
+  nextMatch: Match | null
+  nextMatchContext: DashboardNextMatchReadModel | null
+  recentMatches: Match[]
+  standings: LeagueStanding[]
+  activeMarketListings: MarketListing[]
+  operational: DashboardOperationalReadModel
+  economy: { sponsorships: SponsorshipContract[]; loans: ClubLoan[]; liabilities: ClubLiability[]; latestCycle: FinancialCycle | null }
+  communications: { journal: JournalArticle[]; notifications: Notification[] }
+}
 export interface UniverseOverviewReadModel { universe: Universe; club: Club | null; participantCompetitions: CompetitionParticipant[] }
 export interface UniverseDirectoryEntry { universe: Universe; club: Club | null; membershipRole: UniverseRole | null }
 export interface UniverseDirectoryReadModel { entries: UniverseDirectoryEntry[]; managedUniverseIds: UUID[] }
