@@ -4,7 +4,7 @@ import { ArrowLeft, Gavel, ShieldCheck, WalletCards } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { createApplicationServices } from '@/lib/infrastructure/repositories/supabase/factory'
 import { CurrencyDisplay } from '@/components/clan/currency-display'
-import { MarketListingCard } from '@/components/market/market-listing-card'
+import { AuctionClient } from '@/components/market/auction-client'
 
 export default async function AuctionPage({ searchParams }: { searchParams: Promise<{ universe?: string }> }) {
   const supabase = await createClient()
@@ -23,13 +23,10 @@ export default async function AuctionPage({ searchParams }: { searchParams: Prom
     <div className="space-y-7">
       <Link href={`/market?universe=${market.universe.id}`} className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"><ArrowLeft className="h-4 w-4" />Voltar ao mercado</Link>
       <section className="brand-watermark rounded-2xl border border-white/[0.07] bg-[#0b0b0b] px-5 py-6 sm:px-7">
-        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"><div><p className="clan-kicker">Leilões · {market.universe.name}</p><h1 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">Escrow real. Concorrência transparente.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">As listagens abaixo já são leilões reais do domínio. A licitação será o próximo comando a ativar depois da validação deste read model e da UX de confirmação.</p></div><CurrencyDisplay kind="silver" amount={market.silverBalance} label="Silver disponível" /></div>
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"><div><p className="clan-kicker">Leilões · {market.universe.name}</p><h1 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">Escrow real. Concorrência transparente.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">Cada licitação passa pelo ledger do universo. O maior bid mantém Silver reservado; quando é superado, o escrow anterior é libertado pela operação transacional.</p></div><CurrencyDisplay kind="silver" amount={market.silverBalance} label="Silver disponível" /></div>
       </section>
       <section className="grid gap-4 md:grid-cols-3"><Rule icon={WalletCards} title="Escrow" text="O maior bid mantém Silver reservado; o bid anterior é libertado de forma transacional." /><Rule icon={Gavel} title="Fecho atómico" text="Jogador, pagamento, fee e escrow são liquidados juntos ou a operação falha por inteiro." /><Rule icon={ShieldCheck} title="Auditável" text="Cada bid e settlement está associado à listagem, clube, universo e ledger." /></section>
-      <section>
-        <div className="mb-4"><p className="text-sm font-semibold">Leilões ativos</p><p className="text-xs text-muted-foreground">{market.auctionListings.length} listagens</p></div>
-        {market.auctionListings.length === 0 ? <div className="clan-panel-neutral flex min-h-72 flex-col items-center justify-center rounded-2xl p-8 text-center"><Gavel className="h-10 w-10 text-primary/45" /><h2 className="mt-4 text-xl font-black">Sem leilões ativos</h2><p className="mt-2 text-sm text-muted-foreground">Quando uma listagem AUCTION estiver ativa neste universo, aparece aqui automaticamente.</p></div> : <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{market.auctionListings.map(entry => <MarketListingCard key={entry.listing.id} entry={entry} ownClubId={market.buyerClub.id} />)}</div>}
-      </section>
+      <section><div className="mb-4"><p className="text-sm font-semibold">Leilões ativos</p><p className="text-xs text-muted-foreground">{market.auctionListings.length} listagens</p></div><AuctionClient market={market} /></section>
     </div>
   )
 }
