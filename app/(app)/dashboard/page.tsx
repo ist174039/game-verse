@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createApplicationServices } from '@/lib/infrastructure/repositories/supabase/factory'
 import { redirect } from 'next/navigation'
 import { DashboardHeader } from '@/components/dashboard/dashboard-header'
 import { StatsCards } from '@/components/dashboard/stats-cards'
@@ -9,52 +10,43 @@ import { QuickActions } from '@/components/dashboard/quick-actions'
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/auth/login')
 
-  if (!user) {
-    redirect('/auth/login')
+  const services = createApplicationServices(supabase)
+  const universes = await services.universes.listAvailable(user.id)
+  const ordered = [...universes].sort((a,b) => Number(b.kind === 'MAIN') - Number(a.kind === 'MAIN'))
+
+  let activeUniverse = null
+  for (const universe of ordered) {
+    const club = await services.clubs.getForUserInUniverse(user.id, universe.id)
+    if (club) { activeUniverse = universe; break }
   }
+  if (!activeUniverse) redirect('/universos')
 
-  // Transitional adapter: the current database is still the legacy GameVerse schema.
-  // The visual layer is already aligned with Clã das Sombras; these reads will be
-  // replaced by the new universe/club/ledger model when the definitive Supabase is connected.
-  const [profileResult, clubResult, walletResult, transactionsResult] = await Promise.all([
-    supabase.from('user_profile').select('*').eq('id', user.id).single(),
-    supabase.from('club').select('*').eq('user_id', user.id).single(),
-    supabase.from('wallet').select('*').eq('user_id', user.id).single(),
-    supabase.from('coin_transaction').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
-  ])
+  const dashboard = await services.reads.dashboard.load(user.id, activeUniverse.id)
+  if (!dashboard) redirect('/universos')
 
-  const infraResult = clubResult.data?.id
-    ? await supabase.from('club_infrastructure').select('*').eq('club_id', clubResult.data.id).limit(5)
-    : { data: [] }
-
-  const profile = profileResult.data
-  const club = clubResult.data
-  const wallet = walletResult.data
-  const transactions = transactionsResult.data || []
-  const infrastructure = infraResult.data || []
+  const ownStanding = dashboard.standings.find(row => row.clubId === dashboard.club.id)
+  const gamesPlayed = ownStanding?.played ?? dashboard.recentMatches.length
 
   return (
     <div className="space-y-5 sm:space-y-6">
-      <DashboardHeader
-        username={profile?.username || 'Manager'}
-        isNewUser={profile?.is_new_user || false}
-      />
+      <DashboardHeader username={dashboard.user.username || 'Manager'} isNewUser={dashboard.user.managerXp === 0} />
 
-      <ClubOverview club={club} infrastructure={infrastructure} />
+      <ClubOverview club={dashboard.club} recentMatches={dashboard.recentMatches} universeName={dashboard.universe.name} />
 
       <StatsCards
-        silver={wallet?.balance || 0}
-        gold={0}
-        bronze={0}
-        eloRating={profile?.elo_rating || 1200}
-        prestigeLevel={profile?.prestige_level || 1}
-        gamesPlayed={profile?.games_played_valid || 0}
+        silver={dashboard.currencies.silver}
+        gold={dashboard.currencies.gold}
+        bronze={dashboard.currencies.bronze}
+        eloRating={dashboard.club.elo}
+        prestigeScore={dashboard.club.prestige}
+        gamesPlayed={gamesPlayed}
       />
 
       <section className="grid gap-5 xl:grid-cols-[1.25fr_.75fr]">
         <div className="min-w-0">
-          <RecentActivity transactions={transactions} />
+          <RecentActivity articles={dashboard.communications.journal} />
         </div>
         <div className="min-w-0">
           <QuickActions />
