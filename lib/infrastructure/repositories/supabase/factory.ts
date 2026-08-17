@@ -13,6 +13,7 @@ import { SupabaseSocialRepository } from './social-repository'
 import { SupabaseOperationsRepository } from './operations-repository'
 import { SupabaseGovernanceRepository } from './governance-repository'
 import { SupabaseDashboardReadRepository, SupabaseOnboardingReadRepository, SupabaseUniverseOverviewReadRepository } from './read-repositories'
+import { SupabaseUniverseDirectoryReadRepository } from './universe-directory-read-repository'
 
 /** Create RLS-scoped repositories for the authenticated application request. */
 export function createApplicationServices(client: SupabaseClient): ApplicationServices {
@@ -33,15 +34,12 @@ export function createApplicationServices(client: SupabaseClient): ApplicationSe
       dashboard: new SupabaseDashboardReadRepository(client),
       onboarding: new SupabaseOnboardingReadRepository(client),
       universeOverview: new SupabaseUniverseOverviewReadRepository(client),
+      universeDirectory: new SupabaseUniverseDirectoryReadRepository(client),
     },
   }
 }
 
-/**
- * Add service-role governance capabilities only after the caller has passed
- * server-side RBAC. Normal application repositories remain bound to the user's
- * RLS client even inside the backoffice.
- */
+/** Add service-role governance capabilities only after server-side RBAC. */
 export function createAdminApplicationServices(userClient: SupabaseClient, serviceClient: SupabaseClient): AdminApplicationServices {
   return {
     ...createApplicationServices(userClient),

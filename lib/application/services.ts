@@ -13,7 +13,7 @@ import type {
   SocialRepository,
   UniverseRepository,
 } from './contracts'
-import type { DashboardReadRepository, OnboardingReadRepository, UniverseOverviewReadRepository } from './read-repositories'
+import type { DashboardReadRepository, OnboardingReadRepository, UniverseDirectoryReadRepository, UniverseOverviewReadRepository } from './read-repositories'
 
 /** User-facing dependency container. Every repository is RLS-scoped to the authenticated user. */
 export interface ApplicationServices {
@@ -33,6 +33,7 @@ export interface ApplicationServices {
     dashboard: DashboardReadRepository
     onboarding: OnboardingReadRepository
     universeOverview: UniverseOverviewReadRepository
+    universeDirectory: UniverseDirectoryReadRepository
   }
 }
 

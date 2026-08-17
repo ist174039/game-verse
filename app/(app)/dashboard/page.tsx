@@ -7,19 +7,30 @@ import { ClubOverview } from '@/components/dashboard/club-overview'
 import { RecentActivity } from '@/components/dashboard/recent-activity'
 import { QuickActions } from '@/components/dashboard/quick-actions'
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ universe?: string }> }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
   const services = createApplicationServices(supabase)
+  const requestedUniverseId = (await searchParams).universe
   const universes = await services.universes.listAvailable(user.id)
   const ordered = [...universes].sort((a,b) => Number(b.kind === 'MAIN') - Number(a.kind === 'MAIN'))
 
   let activeUniverse = null
-  for (const universe of ordered) {
-    const club = await services.clubs.getForUserInUniverse(user.id, universe.id)
-    if (club) { activeUniverse = universe; break }
+  if (requestedUniverseId) {
+    const requested = ordered.find(universe => universe.id === requestedUniverseId) ?? null
+    if (requested) {
+      const club = await services.clubs.getForUserInUniverse(user.id, requested.id)
+      if (club) activeUniverse = requested
+    }
+  }
+
+  if (!activeUniverse) {
+    for (const universe of ordered) {
+      const club = await services.clubs.getForUserInUniverse(user.id, universe.id)
+      if (club) { activeUniverse = universe; break }
+    }
   }
   if (!activeUniverse) redirect('/onboarding')
 
