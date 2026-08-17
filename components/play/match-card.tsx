@@ -1,56 +1,49 @@
 'use client'
 
-import { AlertTriangle, CheckCircle2, Clock, LockKeyhole, Shield, Swords } from 'lucide-react'
+import Link from 'next/link'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { AlertTriangle, CheckCircle2, Clock, FilePenLine, Shield, Swords } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { MatchWithPlayers } from '@/lib/types'
+import { Input } from '@/components/ui/input'
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog'
+import type { MatchContextReadModel } from '@/lib/application/read-models'
 
-const stateLabels: Record<string, string> = {
-  CREATED: 'Criada',
-  WAITING_CONFIRMATION: 'Aguardar confirmação',
-  CONFIRMED_BY_ONE: 'Confirmação parcial',
-  CONFIRMED: 'Confirmada',
-  DISPUTED: 'Em disputa',
-  AUTO_CONFIRMED: 'Auto-confirmada',
-  ECONOMY_UPDATE: 'Liquidação antiga',
-  RANKING_UPDATE: 'Ranking antigo',
-}
+const stateLabels: Record<string, string> = { SCHEDULED: 'Agendada', READY: 'Pronta', PLAYED: 'Jogada', RESULT_SUBMITTED: 'Resultado submetido', CONFIRMED: 'Confirmada', DISPUTED: 'Em disputa', AUTO_CONFIRMED: 'Auto-confirmada', SETTLED: 'Liquidada', CANCELLED: 'Cancelada' }
 
-export function MatchCard({ match, userId }: { match: MatchWithPlayers; userId: string }) {
-  const isCreator = match.creator_id === userId
-  const self = isCreator ? match.creator : match.opponent
-  const opponent = isCreator ? match.opponent : match.creator
-  const hasScore = match.creator_score != null && match.opponent_score != null
-  const selfScore = isCreator ? match.creator_score : match.opponent_score
-  const opponentScore = isCreator ? match.opponent_score : match.creator_score
+export function MatchCard({ context, universeId }: { context: MatchContextReadModel; universeId: string }) {
+  const router = useRouter()
+  const { match, homeClub, awayClub, competition } = context
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [disputeOpen, setDisputeOpen] = useState(false)
+  const [reason, setReason] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const final = match.state === 'SETTLED'
   const disputed = match.state === 'DISPUTED'
-  const confirmed = ['CONFIRMED', 'AUTO_CONFIRMED', 'ECONOMY_UPDATE', 'RANKING_UPDATE'].includes(match.state)
+  const hasScore = match.homeScore != null && match.awayScore != null
 
-  return (
+  async function command(url: string, body: Record<string, unknown>) {
+    setLoading(true); setError(null)
+    try {
+      const response = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload.error || 'operation_failed')
+      setConfirmOpen(false); setDisputeOpen(false); router.refresh()
+    } catch (caught) { setError(caught instanceof Error ? caught.message : 'Não foi possível concluir a operação.') }
+    finally { setLoading(false) }
+  }
+
+  return <>
     <article className="rounded-xl border border-white/[0.07] bg-[#0b0b0b] p-4 transition hover:border-primary/18">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground"><Swords className="h-4 w-4 text-primary" />{match.match_type}</div>
-        <span className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[9px] font-bold uppercase tracking-[0.12em] ${disputed ? 'border-destructive/25 bg-destructive/[0.07] text-destructive' : confirmed ? 'border-[rgba(67,184,120,.2)] bg-[rgba(67,184,120,.06)] text-[var(--success)]' : 'border-white/[0.08] bg-white/[0.02] text-muted-foreground'}`}>
-          {disputed ? <AlertTriangle className="h-3 w-3" /> : confirmed ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
-          {stateLabels[match.state] || match.state}
-        </span>
-      </div>
-
-      <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-        <Team name={self?.username || 'Tu'} align="right" />
-        <div className="min-w-20 text-center">
-          {hasScore ? <p className="text-3xl font-black tracking-[-0.06em]">{selfScore} <span className="text-white/20">—</span> {opponentScore}</p> : <p className="text-sm font-black uppercase tracking-[0.16em] text-white/25">VS</p>}
-        </div>
-        <Team name={opponent?.username || 'Adversário'} align="left" />
-      </div>
-
-      <div className="mt-5 flex items-center justify-between gap-3 border-t border-white/[0.06] pt-3">
-        <p className="text-[10px] text-muted-foreground">{new Date(match.created_at).toLocaleString('pt-PT')}</p>
-        <Button size="sm" variant="outline" disabled className="border-white/[0.08]"><LockKeyhole className="mr-1.5 h-3.5 w-3.5" />Fluxo legado</Button>
-      </div>
+      <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground"><Swords className="h-4 w-4 text-primary" />{competition?.name || 'Partida'}{competition && <span className="text-white/25">· {competition.type}</span>}</div><span className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[9px] font-bold uppercase tracking-[0.12em] ${disputed ? 'border-destructive/25 bg-destructive/[0.07] text-destructive' : final ? 'border-[rgba(67,184,120,.2)] bg-[rgba(67,184,120,.06)] text-[var(--success)]' : 'border-white/[0.08] bg-white/[0.02] text-muted-foreground'}`}>{disputed ? <AlertTriangle className="h-3 w-3" /> : final ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}{stateLabels[match.state] || match.state}</span></div>
+      <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3"><Team name={homeClub.name} own={context.isHome} align="right" /><div className="min-w-20 text-center">{hasScore ? <p className="text-3xl font-black tracking-[-0.06em]">{match.homeScore} <span className="text-white/20">—</span> {match.awayScore}</p> : <p className="text-sm font-black uppercase tracking-[0.16em] text-white/25">VS</p>}</div><Team name={awayClub.name} own={!context.isHome} align="left" /></div>
+      {error && <p className="mt-4 rounded-lg border border-red-500/20 bg-red-500/[0.05] p-3 text-xs text-red-300">{error}</p>}
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-3"><p className="text-[10px] text-muted-foreground">{match.scheduledAt ? new Date(match.scheduledAt).toLocaleString('pt-PT') : new Date(match.createdAt).toLocaleString('pt-PT')}</p><div className="flex flex-wrap gap-2">{context.canSubmit && <Button size="sm" variant="outline" asChild><Link href={`/play/${match.id}/submit-result?universe=${universeId}`}><FilePenLine className="mr-1.5 h-3.5 w-3.5" />Submeter resultado</Link></Button>}{context.canConfirm && <Button size="sm" onClick={() => setConfirmOpen(true)}>Confirmar</Button>}{context.canDispute && !disputed && !final && <Button size="sm" variant="outline" onClick={() => setDisputeOpen(true)}>Disputar</Button>}</div></div>
     </article>
-  )
+    <ConfirmationDialog open={confirmOpen} onOpenChange={setConfirmOpen} title="Confirmar resultado e liquidar partida?" description="A confirmação do adversário aplica o settlement: Elo, classificação e consequências associadas passam a ser finais." confirmLabel="Confirmar e liquidar" tone="warning" isLoading={loading} onConfirm={() => command('/api/competition/confirm-result', { matchId: match.id, idempotencyKey: `match-confirm:${crypto.randomUUID()}` })} />
+    <ConfirmationDialog open={disputeOpen} onOpenChange={setDisputeOpen} title="Abrir disputa" description="A partida fica bloqueada para settlement até revisão." confirmLabel="Abrir disputa" tone="danger" isLoading={loading} onConfirm={() => command('/api/competition/dispute', { matchId: match.id, reason })}><div><label htmlFor={`reason-${match.id}`} className="text-xs font-semibold">Motivo</label><Input id={`reason-${match.id}`} className="mt-2" value={reason} onChange={event => setReason(event.target.value)} placeholder="Descreve objetivamente a divergência" /></div></ConfirmationDialog>
+  </>
 }
 
-function Team({ name, align }: { name: string; align: 'left' | 'right' }) {
-  return <div className={`flex min-w-0 items-center gap-2 ${align === 'right' ? 'justify-end text-right' : ''}`}>{align === 'left' && <Shield className="h-5 w-5 shrink-0 text-white/25" />}<p className="truncate text-sm font-bold text-foreground">{name}</p>{align === 'right' && <Shield className="h-5 w-5 shrink-0 text-primary/70" />}</div>
-}
+function Team({ name, align, own }: { name: string; align: 'left'|'right'; own: boolean }) { return <div className={`flex min-w-0 items-center gap-2 ${align === 'right' ? 'justify-end text-right' : ''}`}>{align === 'left' && <Shield className={`h-5 w-5 shrink-0 ${own ? 'text-primary/70' : 'text-white/25'}`} />}<p className={`truncate text-sm font-bold ${own ? 'text-primary' : 'text-foreground'}`}>{name}</p>{align === 'right' && <Shield className={`h-5 w-5 shrink-0 ${own ? 'text-primary/70' : 'text-white/25'}`} />}</div> }
