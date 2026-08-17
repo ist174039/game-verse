@@ -1,12 +1,11 @@
 'use server'
 
-import { stripe } from '@/lib/stripe'
+import { getStripe } from '@/lib/stripe'
 import { createClient } from '@/lib/supabase/server'
 
 export async function startCoinCheckout(packageId: string, userId: string) {
   const supabase = await createClient()
-  
-  // Get the coin package from database
+
   const { data: coinPackage, error } = await supabase
     .from('coin_package')
     .select('*')
@@ -17,9 +16,11 @@ export async function startCoinCheckout(packageId: string, userId: string) {
     throw new Error('Coin package not found')
   }
 
-  const totalCoins = coinPackage.coins_amount + Math.round(coinPackage.coins_amount * coinPackage.bonus_percentage / 100)
+  const totalCoins =
+    coinPackage.coins_amount +
+    Math.round((coinPackage.coins_amount * coinPackage.bonus_percentage) / 100)
 
-  // Create Stripe checkout session
+  const stripe = getStripe()
   const session = await stripe.checkout.sessions.create({
     ui_mode: 'embedded',
     redirect_on_completion: 'never',
@@ -29,7 +30,11 @@ export async function startCoinCheckout(packageId: string, userId: string) {
           currency: 'eur',
           product_data: {
             name: coinPackage.name,
-            description: `${totalCoins.toLocaleString()} GameCoins${coinPackage.bonus_percentage > 0 ? ` (includes ${coinPackage.bonus_percentage}% bonus)` : ''}`,
+            description: `${totalCoins.toLocaleString()} Gold${
+              coinPackage.bonus_percentage > 0
+                ? ` (inclui ${coinPackage.bonus_percentage}% de bónus)`
+                : ''
+            }`,
           },
           unit_amount: coinPackage.price_cents,
         },
@@ -40,11 +45,11 @@ export async function startCoinCheckout(packageId: string, userId: string) {
     metadata: {
       package_id: packageId,
       user_id: userId,
+      currency_type: 'GOLD',
       coins_to_grant: totalCoins.toString(),
     },
   })
 
-  // Record the pending transaction
   await supabase.from('fiat_transaction').insert({
     user_id: userId,
     package_id: packageId,
