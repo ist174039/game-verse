@@ -4,8 +4,11 @@ export interface InternalJobResult {
   defaultedLoans: number
   readiedMatches: number
   progressedCompetitions: number
+  settledAuctions: number
+  expiredAuctions: number
+  failedAuctions: number
 }
 
 export interface InternalJobsRepository {
-  runMaintenance(input: { eventLimit?: number; listingLimit?: number; matchLimit?: number; jobKey: string }): Promise<InternalJobResult>
+  runMaintenance(input: { eventLimit?: number; listingLimit?: number; matchLimit?: number; auctionLimit?: number; jobKey: string }): Promise<InternalJobResult>
 }
