@@ -33,9 +33,9 @@ const adminNavItems: NavItem[] = [
   { label: 'Backoffice', href: '/admin/backoffice', icon: <ShieldAlert className="h-[18px] w-[18px]" /> },
 ]
 
-interface AppSidebarProps { username?: string; balance?: number; isGuest?: boolean }
+interface AppSidebarProps { username?: string; balance?: number; isGuest?: boolean; hasInternalAccess?: boolean }
 
-export function AppSidebar({ username = 'Manager', balance = 0, isGuest = false }: AppSidebarProps) {
+export function AppSidebar({ username = 'Manager', balance = 0, isGuest = false, hasInternalAccess = false }: AppSidebarProps) {
   const pathname = usePathname(); const router = useRouter(); const [mobileOpen, setMobileOpen] = useState(false)
   const handleLogout = async () => { const supabase = createClient(); await supabase.auth.signOut(); router.push('/auth/login') }
   const NavContent = () => <>
@@ -51,7 +51,7 @@ export function AppSidebar({ username = 'Manager', balance = 0, isGuest = false 
     <nav className="flex-1 space-y-1 overflow-y-auto pr-1">
       <NavGroup title="Clube" items={mainNavItems} pathname={pathname} close={()=>setMobileOpen(false)} />
       <NavGroup title="Plataforma" items={secondaryNavItems} pathname={pathname} close={()=>setMobileOpen(false)} />
-      <div className="my-3 h-px bg-white/[.05]"/><div className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-[.15em] text-muted-foreground/60">Operações restritas</div>{adminNavItems.map(item=><NavLink key={item.href} item={item} pathname={pathname} close={()=>setMobileOpen(false)} destructive />)}
+      {hasInternalAccess && <><div className="my-3 h-px bg-white/[.05]"/><div className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-[.15em] text-muted-foreground/60">Operações restritas</div>{adminNavItems.map(item=><NavLink key={item.href} item={item} pathname={pathname} close={()=>setMobileOpen(false)} destructive />)}</>}
     </nav>
     <div className="mt-4 border-t border-white/[.055] pt-4"><Link href="/profile" className="mb-2 flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-white/[.035]"><div className="flex h-9 w-9 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-sm font-bold text-primary">{username.charAt(0).toUpperCase()}</div><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{username}</p><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Manager</p></div></Link><Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" onClick={handleLogout}><LogOut className="h-[18px] w-[18px]"/>Sair</Button></div>
   </>
