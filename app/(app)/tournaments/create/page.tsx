@@ -1,25 +1,5 @@
-import { notFound } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { CreateTournamentClient } from '@/components/tournaments/create-tournament-client'
+import { redirect } from 'next/navigation'
 
-export const dynamic = 'force-dynamic'
-
-export default async function CreateTournamentPage() {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return notFound()
-
-  const { data: profile } = await supabase
-    .from('user_profile')
-    .select('id, username')
-    .eq('id', user.id)
-    .single()
-
-  return (
-    <CreateTournamentClient
-      userId={user.id}
-      username={profile?.username || 'Manager'}
-    />
-  )
+export default function CreateTournamentPage() {
+  redirect('/tournaments')
 }
