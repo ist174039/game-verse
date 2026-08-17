@@ -56,7 +56,7 @@ function BackendConfigurationRequired() {
 
         <div className="mt-5 rounded-xl border border-white/[0.07] bg-black/20 p-4">
           <div className="flex items-center gap-2"><Settings className="h-4 w-4 text-primary"/><p className="text-sm font-black">Produção</p></div>
-          <p className="mt-2 text-xs leading-5 text-muted-foreground">Depois de configurar estas variáveis no projeto Vercel, é necessário criar um novo deployment. O Admin utiliza também <code className="text-foreground">SUPABASE_SERVICE_ROLE_KEY</code> exclusivamente no servidor para leitura e operações administrativas globais.</p>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">Depois de configurar estas variáveis no projeto Vercel, é necessário criar um novo deployment. O Admin utiliza também <code className="text-foreground">SUPABASE_SECRET_KEY</code> exclusivamente no servidor; <code className="text-foreground">SUPABASE_SERVICE_ROLE_KEY</code> continua suportada apenas como fallback legacy.</p>
         </div>
       </section>
     </main>
