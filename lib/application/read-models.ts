@@ -32,4 +32,34 @@ export interface CompetitionHubReadModel {
   completedMatches: MatchContextReadModel[]
 }
 
+export interface EconomyLedgerMovementReadModel {
+  entryId: UUID
+  transactionId: UUID
+  transactionType: string
+  direction: 'DEBIT' | 'CREDIT'
+  currency: 'GOLD' | 'SILVER' | 'BRONZE'
+  scope: 'USER' | 'CLUB'
+  amount: number
+  reason: string | null
+  referenceType: string | null
+  referenceId: UUID | null
+  createdAt: string
+}
+export interface EconomyReadModel {
+  universe: Universe
+  club: Club
+  balances: { gold: number; bronze: number; silver: number }
+  sponsorships: SponsorshipContract[]
+  loans: ClubLoan[]
+  liabilities: ClubLiability[]
+  cycles: FinancialCycle[]
+  movements: EconomyLedgerMovementReadModel[]
+  totals: {
+    activeLoanPrincipal: number
+    openLiabilities: number
+    activeSponsorshipPeriodicIncome: number
+    latestCycleNetResult: number | null
+  }
+}
+
 export interface OnboardingReadModel { userId: UUID; profileReady: boolean; availableUniverses: Universe[]; existingClubUniverseIds: UUID[]; nextStep: 'IDENTITY' | 'UNIVERSE' | 'CLUB' | 'COMPLETE' }

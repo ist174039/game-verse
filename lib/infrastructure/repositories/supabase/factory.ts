@@ -17,11 +17,12 @@ import { SupabaseUniverseDirectoryReadRepository } from './universe-directory-re
 import { SupabaseSquadReadRepository } from './squad-read-repository'
 import { SupabaseMarketReadRepository } from './market-read-repository'
 import { SupabaseCompetitionHubReadRepository } from './competition-hub-read-repository'
+import { SupabaseEconomyReadRepository } from './economy-read-repository'
 
 export function createApplicationServices(client: SupabaseClient): ApplicationServices {
   return {
     identity: new SupabaseIdentityRepository(client), universes: new SupabaseUniverseRepository(client), clubs: new SupabaseClubRepository(client), players: new SupabasePlayerRepository(client), competitions: new SupabaseCompetitionRepository(client), market: new SupabaseMarketRepository(client), ledger: new SupabaseLedgerRepository(client), clubEconomy: new SupabaseClubEconomyRepository(client), retention: new SupabaseRetentionRepository(client), communications: new SupabaseCommunicationRepository(client), social: new SupabaseSocialRepository(client), operations: new SupabaseOperationsRepository(client),
-    reads: { dashboard: new SupabaseDashboardReadRepository(client), onboarding: new SupabaseOnboardingReadRepository(client), universeOverview: new SupabaseUniverseOverviewReadRepository(client), universeDirectory: new SupabaseUniverseDirectoryReadRepository(client), squad: new SupabaseSquadReadRepository(client), market: new SupabaseMarketReadRepository(client), competitionHub: new SupabaseCompetitionHubReadRepository(client) },
+    reads: { dashboard: new SupabaseDashboardReadRepository(client), onboarding: new SupabaseOnboardingReadRepository(client), universeOverview: new SupabaseUniverseOverviewReadRepository(client), universeDirectory: new SupabaseUniverseDirectoryReadRepository(client), squad: new SupabaseSquadReadRepository(client), market: new SupabaseMarketReadRepository(client), competitionHub: new SupabaseCompetitionHubReadRepository(client), economy: new SupabaseEconomyReadRepository(client) },
   }
 }
 export function createAdminApplicationServices(userClient: SupabaseClient, serviceClient: SupabaseClient): AdminApplicationServices { return { ...createApplicationServices(userClient), governance: new SupabaseGovernanceRepository(serviceClient) } }
