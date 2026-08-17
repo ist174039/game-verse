@@ -3,11 +3,14 @@ import type {
   ClubRepository,
   CommunicationRepository,
   CompetitionRepository,
+  GovernanceRepository,
   IdentityRepository,
   LedgerRepository,
   MarketRepository,
+  OperationsRepository,
   PlayerRepository,
   RetentionRepository,
+  SocialRepository,
   UniverseRepository,
 } from './contracts'
 
@@ -23,6 +26,9 @@ export interface ApplicationServices {
   clubEconomy: ClubEconomyRepository
   retention: RetentionRepository
   communications: CommunicationRepository
+  social: SocialRepository
+  governance: GovernanceRepository
+  operations: OperationsRepository
 }
 
 export type ApplicationServiceName = keyof ApplicationServices

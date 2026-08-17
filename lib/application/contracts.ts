@@ -5,6 +5,9 @@ import type { CompetitionParticipant, LeagueStanding, MatchDispute, MatchSettlem
 import type { ClubLoan, FinancialCycle, SponsorshipContract } from '@/lib/domain/club-economy'
 import type { AchievementDefinition, BronzeStoreItem, DailyRewardClaim, MissionDefinition, UserAchievement, UserMission } from '@/lib/domain/retention'
 import type { JournalArticle, Notification } from '@/lib/domain/communications'
+import type { AdminAuditLog, ModerationCase, SupportTicket } from '@/lib/domain/governance'
+import type { ChatMessage, Community, CommunityPost, DirectConversation } from '@/lib/domain/social'
+import type { ClubLiability, MatchFinancialEvent } from '@/lib/domain/operations'
 
 export interface IdentityRepository {
   getProfile(userId: UUID): Promise<UserProfile | null>
@@ -75,4 +78,24 @@ export interface CommunicationRepository {
   listJournal(universeId: UUID, limit?: number): Promise<JournalArticle[]>
   listNotifications(userId: UUID, limit?: number): Promise<Notification[]>
   markNotificationRead(notificationId: UUID): Promise<void>
+}
+
+export interface SocialRepository {
+  listCommunities(userId: UUID): Promise<Community[]>
+  listCommunityPosts(communityId: UUID, limit?: number): Promise<CommunityPost[]>
+  listConversations(userId: UUID): Promise<DirectConversation[]>
+  listMessages(conversationId: UUID, limit?: number): Promise<ChatMessage[]>
+}
+
+export interface GovernanceRepository {
+  listTickets(limit?: number): Promise<SupportTicket[]>
+  listModerationCases(limit?: number): Promise<ModerationCase[]>
+  listAuditLog(limit?: number): Promise<AdminAuditLog[]>
+  reverseMatchSettlement(input: { matchId: UUID; reason: string; idempotencyKey: string }): Promise<Record<string, unknown>>
+  reverseLedgerTransaction(input: { transactionId: UUID; reason: string; idempotencyKey: string }): Promise<UUID>
+}
+
+export interface OperationsRepository {
+  listClubLiabilities(clubId: UUID): Promise<ClubLiability[]>
+  listMatchFinancialEvents(clubId: UUID, limit?: number): Promise<MatchFinancialEvent[]>
 }
