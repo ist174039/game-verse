@@ -1,20 +1,21 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Banknote, CircleDollarSign, Gem, Landmark, ReceiptText, Scale, ShieldCheck, TrendingDown, TrendingUp } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { createApplicationServices } from '@/lib/infrastructure/repositories/supabase/factory'
 import { CurrencyDisplay } from '@/components/clan/currency-display'
+import { FinanceClubClient } from '@/components/economy/finance-club-client'
+import { Button } from '@/components/ui/button'
 
 export default async function EconomyPage({ searchParams }: { searchParams: Promise<{ universe?: string }> }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user || user.is_anonymous) redirect('/auth/login')
-
   const services = createApplicationServices(supabase)
   const directory = await services.reads.universeDirectory.load(user.id)
   const requestedUniverseId = (await searchParams).universe
   const selected = (requestedUniverseId ? directory.entries.find(entry => entry.universe.id === requestedUniverseId && entry.club) : null) ?? directory.entries.find(entry => entry.club)
   if (!selected?.club) redirect('/onboarding')
-
   const economy = await services.reads.economy.load(user.id, selected.universe.id)
   if (!economy) redirect('/onboarding')
 
@@ -24,48 +25,17 @@ export default async function EconomyPage({ searchParams }: { searchParams: Prom
   const activeSponsors = economy.sponsorships.filter(item => item.state === 'ACTIVE')
 
   return <div className="space-y-7">
-    <section className="brand-watermark rounded-2xl border border-white/[0.07] bg-[#0b0b0b] px-5 py-6 sm:px-7">
-      <p className="clan-kicker">Economia · {economy.universe.name}</p>
-      <h1 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">Capital global e tesouraria do clube, sem misturar moedas.</h1>
-      <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">Gold e Bronze pertencem ao manager. Silver pertence exclusivamente ao clube neste universo. Dívida, liabilities e resultados operacionais são apresentados separadamente do saldo disponível.</p>
-    </section>
+    <section className="brand-watermark rounded-2xl border border-white/[0.07] bg-[#0b0b0b] px-5 py-6 sm:px-7"><div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"><div><p className="clan-kicker">Economia · {economy.universe.name}</p><h1 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">Capital global e tesouraria do clube, sem misturar moedas.</h1><p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">Gold e Bronze pertencem ao manager. Silver pertence exclusivamente ao clube neste universo. Dívida, liabilities e resultados operacionais são apresentados separadamente do saldo disponível.</p></div><Button asChild><Link href="/economy/buy"><Gem className="mr-2 h-4 w-4" />Comprar Gold</Link></Button></div></section>
 
-    <section className="grid gap-4 md:grid-cols-3">
-      <CurrencyCard kind="gold" title="Gold" amount={economy.balances.gold} detail="Conta global do manager. Premium e financiamento controlado." />
-      <CurrencyCard kind="silver" title="Silver" amount={economy.balances.silver} detail={`Tesouraria de ${economy.club.name}. Mercado, salários, manutenção e competição.`} />
-      <CurrencyCard kind="bronze" title="Bronze" amount={economy.balances.bronze} detail="Conta global de engagement, achievements e colecionáveis." />
-    </section>
+    <section className="grid gap-4 md:grid-cols-3"><CurrencyCard kind="gold" title="Gold" amount={economy.balances.gold} detail="Conta global do manager. Premium e financiamento controlado." /><CurrencyCard kind="silver" title="Silver" amount={economy.balances.silver} detail={`Tesouraria de ${economy.club.name}. Mercado, salários, manutenção e competição.`} /><CurrencyCard kind="bronze" title="Bronze" amount={economy.balances.bronze} detail="Conta global de engagement, achievements e colecionáveis." /></section>
 
-    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      <Metric icon={latestCycle && latestCycle.netResult >= 0 ? TrendingUp : TrendingDown} label="Último ciclo" value={latestCycle ? `${signed(latestCycle.netResult)} S` : '—'} detail={latestCycle?.cycleKey ?? 'Sem ciclo liquidado'} tone={latestCycle && latestCycle.netResult < 0 ? 'danger' : 'default'} />
-      <Metric icon={Landmark} label="Capital em dívida" value={`${economy.totals.activeLoanPrincipal.toLocaleString('pt-PT')} S`} detail={`${activeLoans.length} empréstimo(s) ativo(s)`} />
-      <Metric icon={Scale} label="Liabilities em aberto" value={`${economy.totals.openLiabilities.toLocaleString('pt-PT')} S`} detail={`${openLiabilities.length} obrigação(ões) não liquidadas`} tone={economy.totals.openLiabilities > 0 ? 'danger' : 'default'} />
-      <Metric icon={CircleDollarSign} label="Patrocínio periódico" value={`${economy.totals.activeSponsorshipPeriodicIncome.toLocaleString('pt-PT')} S`} detail={`${activeSponsors.length} contrato(s) ativo(s)`} />
-    </section>
+    <FinanceClubClient clubId={economy.club.id} clubName={economy.club.name} goldBalance={economy.balances.gold} financingPolicy={economy.universe.financingPolicy} />
+
+    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Metric icon={latestCycle && latestCycle.netResult >= 0 ? TrendingUp : TrendingDown} label="Último ciclo" value={latestCycle ? `${signed(latestCycle.netResult)} S` : '—'} detail={latestCycle?.cycleKey ?? 'Sem ciclo liquidado'} tone={latestCycle && latestCycle.netResult < 0 ? 'danger' : 'default'} /><Metric icon={Landmark} label="Capital em dívida" value={`${economy.totals.activeLoanPrincipal.toLocaleString('pt-PT')} S`} detail={`${activeLoans.length} empréstimo(s) ativo(s)`} /><Metric icon={Scale} label="Liabilities em aberto" value={`${economy.totals.openLiabilities.toLocaleString('pt-PT')} S`} detail={`${openLiabilities.length} obrigação(ões) não liquidadas`} tone={economy.totals.openLiabilities > 0 ? 'danger' : 'default'} /><Metric icon={CircleDollarSign} label="Patrocínio periódico" value={`${economy.totals.activeSponsorshipPeriodicIncome.toLocaleString('pt-PT')} S`} detail={`${activeSponsors.length} contrato(s) ativo(s)`} /></section>
 
     <section className="grid gap-5 xl:grid-cols-[1.25fr_.75fr]">
-      <div className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-5 sm:p-6">
-        <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Ledger</p><h2 className="mt-1 text-xl font-black">Movimentos da tua economia</h2></div><ReceiptText className="h-5 w-5 text-primary" /></div>
-        <div className="mt-5 divide-y divide-white/[0.06] border-y border-white/[0.06]">
-          {economy.movements.length === 0 ? <p className="py-10 text-center text-sm text-muted-foreground">Ainda não existem movimentos nas contas deste manager/clube.</p> : economy.movements.map(movement => <div key={movement.entryId} className="grid gap-2 py-3 sm:grid-cols-[1fr_auto] sm:items-center"><div className="min-w-0"><p className="truncate text-sm font-semibold">{movement.reason || movement.transactionType}</p><p className="mt-1 text-[10px] uppercase tracking-[0.11em] text-muted-foreground">{movement.transactionType} · {movement.scope} · {new Date(movement.createdAt).toLocaleString('pt-PT')}</p></div><p className={`text-sm font-black tabular-nums ${movement.direction === 'CREDIT' ? 'text-[var(--success)]' : 'text-destructive'}`}>{movement.direction === 'CREDIT' ? '+' : '-'}{movement.amount.toLocaleString('pt-PT')} {movement.currency}</p></div>)}
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        <SummaryCard icon={Banknote} title="Último ciclo financeiro" rows={latestCycle ? [
-          ['Folha salarial', `${latestCycle.payroll.toLocaleString('pt-PT')} S`],
-          ['Manutenção', `${latestCycle.maintenance.toLocaleString('pt-PT')} S`],
-          ['Custos de jogo', `${latestCycle.matchOperatingCost.toLocaleString('pt-PT')} S`],
-          ['Patrocínios', `${latestCycle.sponsorshipIncome.toLocaleString('pt-PT')} S`],
-          ['Receita de estádio', `${latestCycle.stadiumIncome.toLocaleString('pt-PT')} S`],
-        ] : [['Estado', 'Sem ciclo liquidado']]} />
-        <SummaryCard icon={ShieldCheck} title="Regras económicas" rows={[
-          ['Financiamento', economy.universe.financingPolicy],
-          ['Perfil', economy.universe.economicProfile],
-          ['Taxa de mercado', `${economy.universe.marketFeePct}%`],
-          ['Taxa de leilão', `${economy.universe.auctionFeePct}%`],
-        ]} />
-      </div>
+      <div className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-5 sm:p-6"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Ledger</p><h2 className="mt-1 text-xl font-black">Movimentos da tua economia</h2></div><ReceiptText className="h-5 w-5 text-primary" /></div><div className="mt-5 divide-y divide-white/[0.06] border-y border-white/[0.06]">{economy.movements.length === 0 ? <p className="py-10 text-center text-sm text-muted-foreground">Ainda não existem movimentos nas contas deste manager/clube.</p> : economy.movements.map(movement => <div key={movement.entryId} className="grid gap-2 py-3 sm:grid-cols-[1fr_auto] sm:items-center"><div className="min-w-0"><p className="truncate text-sm font-semibold">{movement.reason || movement.transactionType}</p><p className="mt-1 text-[10px] uppercase tracking-[0.11em] text-muted-foreground">{movement.transactionType} · {movement.scope} · {new Date(movement.createdAt).toLocaleString('pt-PT')}</p></div><p className={`text-sm font-black tabular-nums ${movement.direction === 'CREDIT' ? 'text-[var(--success)]' : 'text-destructive'}`}>{movement.direction === 'CREDIT' ? '+' : '-'}{movement.amount.toLocaleString('pt-PT')} {movement.currency}</p></div>)}</div></div>
+      <div className="space-y-4"><SummaryCard icon={Banknote} title="Último ciclo financeiro" rows={latestCycle ? [['Folha salarial', `${latestCycle.payroll.toLocaleString('pt-PT')} S`],['Manutenção', `${latestCycle.maintenance.toLocaleString('pt-PT')} S`],['Custos de jogo', `${latestCycle.matchOperatingCost.toLocaleString('pt-PT')} S`],['Patrocínios', `${latestCycle.sponsorshipIncome.toLocaleString('pt-PT')} S`],['Receita de estádio', `${latestCycle.stadiumIncome.toLocaleString('pt-PT')} S`]] : [['Estado', 'Sem ciclo liquidado']]} /><SummaryCard icon={ShieldCheck} title="Regras económicas" rows={[['Financiamento', economy.universe.financingPolicy],['Perfil', economy.universe.economicProfile],['Taxa de mercado', `${economy.universe.marketFeePct}%`],['Taxa de leilão', `${economy.universe.auctionFeePct}%`]]} /></div>
     </section>
   </div>
 }
