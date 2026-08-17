@@ -2,62 +2,79 @@
 
 import { getStripe } from '@/lib/stripe'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
-export async function startCoinCheckout(packageId: string, userId: string) {
+export async function startGoldCheckout(packageId: string) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Authentication required')
 
-  const { data: coinPackage, error } = await supabase
-    .from('coin_package')
-    .select('*')
+  const { data: goldPackage, error } = await supabase
+    .from('gold_package')
+    .select('id, slug, name, gold_amount, price_cents, fiat_currency, stripe_price_id, active')
     .eq('id', packageId)
+    .eq('active', true)
     .single()
 
-  if (error || !coinPackage) {
-    throw new Error('Coin package not found')
-  }
-
-  const totalCoins =
-    coinPackage.coins_amount +
-    Math.round((coinPackage.coins_amount * coinPackage.bonus_percentage) / 100)
+  if (error || !goldPackage) throw new Error('Gold package not available')
 
   const stripe = getStripe()
-  const session = await stripe.checkout.sessions.create({
-    ui_mode: 'embedded',
-    redirect_on_completion: 'never',
-    line_items: [
-      {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  if (!appUrl) throw new Error('NEXT_PUBLIC_APP_URL is not configured')
+
+  const lineItem = goldPackage.stripe_price_id
+    ? { price: goldPackage.stripe_price_id, quantity: 1 }
+    : {
         price_data: {
-          currency: 'eur',
+          currency: goldPackage.fiat_currency,
           product_data: {
-            name: coinPackage.name,
-            description: `${totalCoins.toLocaleString()} Gold${
-              coinPackage.bonus_percentage > 0
-                ? ` (inclui ${coinPackage.bonus_percentage}% de bónus)`
-                : ''
-            }`,
+            name: goldPackage.name,
+            description: `${Number(goldPackage.gold_amount).toLocaleString('pt-PT')} Gold — Clã das Sombras`,
+            metadata: { app: 'cla-das-sombras', currency_type: 'GOLD' },
           },
-          unit_amount: coinPackage.price_cents,
+          unit_amount: goldPackage.price_cents,
         },
         quantity: 1,
-      },
-    ],
+      }
+
+  const session = await stripe.checkout.sessions.create({
     mode: 'payment',
+    line_items: [lineItem],
+    client_reference_id: user.id,
+    customer_email: user.email,
+    success_url: `${appUrl}/economy?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${appUrl}/economy/buy?payment=cancelled`,
     metadata: {
-      package_id: packageId,
-      user_id: userId,
+      app: 'cla-das-sombras',
+      user_id: user.id,
+      package_id: goldPackage.id,
+      package_slug: goldPackage.slug,
       currency_type: 'GOLD',
-      coins_to_grant: totalCoins.toString(),
+      gold_amount: String(goldPackage.gold_amount),
     },
   })
 
-  await supabase.from('fiat_transaction').insert({
-    user_id: userId,
-    package_id: packageId,
+  const admin = createAdminClient()
+  const { error: orderError } = await admin.from('payment_order').insert({
+    user_id: user.id,
+    package_id: goldPackage.id,
     stripe_session_id: session.id,
-    amount_cents: coinPackage.price_cents,
-    coins_granted: totalCoins,
-    status: 'pending',
+    amount_cents: goldPackage.price_cents,
+    fiat_currency: goldPackage.fiat_currency,
+    gold_amount: goldPackage.gold_amount,
+    status: 'PENDING',
+    metadata: { checkout_url_created: Boolean(session.url) },
   })
 
-  return session.client_secret
+  if (orderError) {
+    await stripe.checkout.sessions.expire(session.id).catch(() => undefined)
+    throw new Error('Unable to create payment order')
+  }
+
+  return { id: session.id, url: session.url }
+}
+
+/** @deprecated Legacy compatibility only. User identity is never accepted from the caller. */
+export async function startCoinCheckout(packageId: string, _legacyUserId?: string) {
+  return startGoldCheckout(packageId)
 }
