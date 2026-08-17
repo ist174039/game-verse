@@ -17,12 +17,16 @@ export default async function CompetitionsPage() {
     <div className="space-y-7">
       <section className="brand-watermark rounded-2xl border border-white/[0.07] bg-[#0b0b0b] px-5 py-6 sm:px-7">
         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div><p className="clan-kicker">Competições</p><h1 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">Liga, Taça, Torneios e Amigáveis.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">As competições pertencem ao universo, partilham o mesmo motor de partidas e só produzem efeitos depois do settlement validado.</p></div>
-          <Button disabled><LockKeyhole className="mr-2 h-4 w-4" />Criar competição</Button>
+          <div>
+            <p className="clan-kicker">Competições</p>
+            <h1 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">Liga, Taça, Torneios e Amigáveis.</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">As competições pertencem ao universo, partilham o mesmo motor de partidas e só produzem efeitos depois do settlement validado.</p>
+          </div>
+          <Button disabled className="w-full lg:w-auto"><LockKeyhole className="h-4 w-4" />Criar competição</Button>
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-4">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <CompetitionType icon={Trophy} title="Liga" detail="Divisões, classificação, promoção e descida." />
         <CompetitionType icon={CupSoda} title="Taça" detail="Knockout, uma ou duas mãos e final." />
         <CompetitionType icon={Swords} title="Torneio" detail="Grupos, eliminatória ou formatos especiais." />
@@ -30,9 +34,15 @@ export default async function CompetitionsPage() {
       </section>
 
       <section className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-5 sm:p-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Registos existentes</p><h2 className="mt-1 text-xl font-black">Competições do schema legado</h2></div><Button variant="outline" asChild className="border-white/[0.08]"><Link href="/calendar">Ver calendário</Link></Button></div>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Registos existentes</p><h2 className="mt-1 text-xl font-black">Competições do schema legado</h2></div>
+          <Button variant="outline" asChild className="w-full border-white/[0.08] sm:w-auto"><Link href="/calendar"><CalendarDays className="h-4 w-4" />Ver calendário</Link></Button>
+        </div>
+
         <div className="mt-5 divide-y divide-white/[0.06] border-y border-white/[0.06]">
-          {legacyCompetitions.length === 0 ? <p className="py-10 text-center text-sm text-muted-foreground">Não existem competições registadas.</p> : legacyCompetitions.map((competition) => (
+          {legacyCompetitions.length === 0 ? (
+            <p className="py-10 text-center text-sm text-muted-foreground">Não existem competições registadas.</p>
+          ) : legacyCompetitions.map((competition) => (
             <div key={competition.id} className="grid gap-3 py-4 sm:grid-cols-[1fr_auto_auto] sm:items-center">
               <div className="min-w-0"><p className="truncate text-sm font-bold">{competition.name}</p><p className="mt-1 text-xs text-muted-foreground">{competition.format} · início {new Date(competition.starts_at).toLocaleDateString('pt-PT')}</p></div>
               <span className="w-fit rounded-md border border-white/[0.07] px-2 py-1 text-[9px] font-bold uppercase tracking-[0.13em] text-muted-foreground">{competition.status}</span>
@@ -46,4 +56,12 @@ export default async function CompetitionsPage() {
   )
 }
 
-function CompetitionType({ icon: Icon, title, detail }: { icon: typeof Trophy; title: string; detail: string }) { return <article className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-5"><div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/15 bg-primary/[0.05] text-primary"><Icon className="h-4 w-4" /></div><h2 className="mt-4 font-black">{title}</h2><p className="mt-2 text-xs leading-5 text-muted-foreground">{detail}</p></article> }
+function CompetitionType({ icon: Icon, title, detail }: { icon: typeof Trophy; title: string; detail: string }) {
+  return (
+    <article className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-5">
+      <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-primary/15 bg-primary/[0.05] text-primary"><Icon className="h-4 w-4" /></div>
+      <h2 className="mt-4 font-black">{title}</h2>
+      <p className="mt-2 text-xs leading-5 text-muted-foreground">{detail}</p>
+    </article>
+  )
+}
