@@ -1,95 +1,46 @@
-export type Currency = 'GOLD' | 'SILVER' | 'BRONZE'
+import type { CurrencyCode, UUID } from './core'
 
-export type LedgerEntryType =
-  | 'SOURCE'
-  | 'TRANSFER'
-  | 'SINK'
-  | 'REVERSAL'
-  | 'ADJUSTMENT'
+export type LedgerDirection = 'DEBIT' | 'CREDIT'
+export type LedgerScope = 'USER' | 'CLUB' | 'UNIVERSE' | 'PLATFORM'
 
-export type LedgerReason =
-  | 'STRIPE_PURCHASE'
-  | 'STARTING_GRANT'
-  | 'CLUB_CAPITAL_INJECTION'
-  | 'UNIVERSE_FUNDING'
-  | 'SPONSORSHIP_FUNDING'
-  | 'LOAN_DISBURSEMENT'
-  | 'LOAN_REPAYMENT'
-  | 'PLAYER_PLATFORM_PURCHASE'
-  | 'PLAYER_MARKET_SALE'
-  | 'PLAYER_AUCTION'
-  | 'PLAYER_QUICK_SELL'
-  | 'MARKET_FEE'
-  | 'AUCTION_FEE'
-  | 'SALARY_PAYMENT'
-  | 'INFRASTRUCTURE_MAINTENANCE'
-  | 'COMPETITION_FEE'
-  | 'TICKET_REVENUE'
-  | 'SPONSOR_REVENUE'
-  | 'COMPETITION_PRIZE'
-  | 'DAILY_REWARD'
-  | 'MISSION_REWARD'
-  | 'ACHIEVEMENT_REWARD'
-  | 'PREMIUM_PURCHASE'
-  | 'UNIVERSE_CREATION'
-  | 'UNIVERSE_UPGRADE'
-  | 'ADMIN_GRANT'
-  | 'ECONOMIC_REVERSAL'
-
-export type WalletScope =
-  | { kind: 'USER_GOLD'; userId: string }
-  | { kind: 'USER_BRONZE'; userId: string }
-  | { kind: 'CLUB_SILVER'; clubId: string; universeId: string }
-  | { kind: 'UNIVERSE_SILVER'; universeId: string }
-  | { kind: 'PLATFORM_SINK'; currency: Currency }
-
-export interface LedgerEntry {
-  id: string
-  idempotencyKey: string
-  currency: Currency
-  entryType: LedgerEntryType
-  reason: LedgerReason
-  amount: number
-  source: WalletScope | null
-  destination: WalletScope | null
-  userId?: string | null
-  clubId?: string | null
-  universeId?: string | null
-  externalReference?: string | null
-  metadata?: Record<string, unknown>
+export interface LedgerTransaction {
+  id: UUID
+  transactionType: string
+  idempotencyKey: string | null
+  referenceType: string | null
+  referenceId: UUID | null
+  reason: string | null
+  metadata: Record<string, unknown>
+  createdBy: UUID | null
   createdAt: string
 }
 
-export type FinancingPolicy = 'DISABLED' | 'LIMITED' | 'STANDARD' | 'OPEN'
-
-export interface ClubFinancingRule {
-  policy: FinancingPolicy
-  seasonalLimitPercentOfStartingBudget: number | null
-  sponsorshipCountsTowardLimit: boolean
+export interface LedgerEntry {
+  id: UUID
+  transactionId: UUID
+  direction: LedgerDirection
+  currency: CurrencyCode
+  scope: LedgerScope
+  userAccountId: UUID | null
+  clubAccountId: UUID | null
+  universeAccountId: UUID | null
+  amount: number
+  createdAt: string
 }
 
-export interface CapitalInjectionProduct {
-  code: string
-  goldCost: number
-  silverGranted: number
-  active: boolean
+export interface MoneyAmount {
+  currency: CurrencyCode
+  amount: number
 }
 
-export interface LoanProduct {
-  code: string
-  silverPrincipal: number
-  goldOriginationFee: number
-  repaymentSilver: number
-  installments: number
-  active: boolean
+export function assertPositiveAmount(amount: number): void {
+  if (!Number.isSafeInteger(amount) || amount <= 0) throw new Error('amount_must_be_positive_integer')
 }
 
-export const ECONOMY_INVARIANTS = {
-  goldScope: 'GLOBAL_USER',
-  silverScope: 'UNIVERSE_CLUB',
-  bronzeScope: 'GLOBAL_USER',
-  silverCanLeaveUniverse: false,
-  freeCurrencyConversion: false,
-  ledgerFirst: true,
-  directBalanceMutationAllowed: false,
-} as const
+export function assertGlobalCurrency(currency: CurrencyCode): asserts currency is 'GOLD' | 'BRONZE' {
+  if (currency !== 'GOLD' && currency !== 'BRONZE') throw new Error('invalid_global_currency')
+}
+
+export function assertClubCurrency(currency: CurrencyCode): asserts currency is 'SILVER' {
+  if (currency !== 'SILVER') throw new Error('invalid_club_currency')
+}
