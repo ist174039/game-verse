@@ -14,7 +14,7 @@ import type {
   UniverseRepository,
 } from './contracts'
 
-/** Explicit application dependency container. UI/server actions depend on this boundary, never on Supabase tables directly. */
+/** User-facing dependency container. Every repository is RLS-scoped to the authenticated user. */
 export interface ApplicationServices {
   identity: IdentityRepository
   universes: UniverseRepository
@@ -27,8 +27,13 @@ export interface ApplicationServices {
   retention: RetentionRepository
   communications: CommunicationRepository
   social: SocialRepository
-  governance: GovernanceRepository
   operations: OperationsRepository
 }
 
+/** Backoffice-only extension. Must be created with a server-only service-role client after RBAC checks. */
+export interface AdminApplicationServices extends ApplicationServices {
+  governance: GovernanceRepository
+}
+
 export type ApplicationServiceName = keyof ApplicationServices
+export type AdminApplicationServiceName = keyof AdminApplicationServices
