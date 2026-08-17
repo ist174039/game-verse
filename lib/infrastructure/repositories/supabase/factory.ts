@@ -14,6 +14,7 @@ import { SupabaseOperationsRepository } from './operations-repository'
 import { SupabaseGovernanceRepository } from './governance-repository'
 import { SupabaseDashboardReadRepository, SupabaseOnboardingReadRepository, SupabaseUniverseOverviewReadRepository } from './read-repositories'
 import { SupabaseUniverseDirectoryReadRepository } from './universe-directory-read-repository'
+import { SupabaseSquadReadRepository } from './squad-read-repository'
 
 /** Create RLS-scoped repositories for the authenticated application request. */
 export function createApplicationServices(client: SupabaseClient): ApplicationServices {
@@ -35,14 +36,12 @@ export function createApplicationServices(client: SupabaseClient): ApplicationSe
       onboarding: new SupabaseOnboardingReadRepository(client),
       universeOverview: new SupabaseUniverseOverviewReadRepository(client),
       universeDirectory: new SupabaseUniverseDirectoryReadRepository(client),
+      squad: new SupabaseSquadReadRepository(client),
     },
   }
 }
 
 /** Add service-role governance capabilities only after server-side RBAC. */
 export function createAdminApplicationServices(userClient: SupabaseClient, serviceClient: SupabaseClient): AdminApplicationServices {
-  return {
-    ...createApplicationServices(userClient),
-    governance: new SupabaseGovernanceRepository(serviceClient),
-  }
+  return { ...createApplicationServices(userClient), governance: new SupabaseGovernanceRepository(serviceClient) }
 }

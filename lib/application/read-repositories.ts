@@ -1,4 +1,4 @@
-import type { DashboardReadModel, OnboardingReadModel, UniverseDirectoryReadModel, UniverseOverviewReadModel } from './read-models'
+import type { DashboardReadModel, OnboardingReadModel, SquadReadModel, UniverseDirectoryReadModel, UniverseOverviewReadModel } from './read-models'
 import type { UUID } from '@/lib/domain/core'
 
 /** Query-side repositories. These projections are optimized for UI composition and never expose database row shapes. */
@@ -16,4 +16,8 @@ export interface UniverseOverviewReadRepository {
 
 export interface UniverseDirectoryReadRepository {
   load(userId: UUID): Promise<UniverseDirectoryReadModel>
+}
+
+export interface SquadReadRepository {
+  load(userId: UUID, universeId: UUID): Promise<SquadReadModel | null>
 }

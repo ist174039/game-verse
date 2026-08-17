@@ -1,4 +1,4 @@
-import type { Club, Match, Universe, UniverseRole, UserProfile, UUID } from '@/lib/domain/core'
+import type { Club, Match, PlayerContract, PlayerMaster, Universe, UniversePlayer, UniverseRole, UserProfile, UUID } from '@/lib/domain/core'
 import type { ClubLoan, FinancialCycle, SponsorshipContract } from '@/lib/domain/club-economy'
 import type { CompetitionParticipant, LeagueStanding } from '@/lib/domain/competition'
 import type { JournalArticle, Notification } from '@/lib/domain/communications'
@@ -39,6 +39,29 @@ export interface UniverseDirectoryEntry {
 export interface UniverseDirectoryReadModel {
   entries: UniverseDirectoryEntry[]
   managedUniverseIds: UUID[]
+}
+
+export interface SquadPlayerReadModel {
+  asset: UniversePlayer
+  player: PlayerMaster
+  activeContract: PlayerContract | null
+}
+
+export interface SquadReadModel {
+  universe: Universe
+  club: Club
+  players: SquadPlayerReadModel[]
+  totals: {
+    squadSize: number
+    active: number
+    reserve: number
+    unavailable: number
+    listed: number
+    auction: number
+    contractPayroll: number
+    salaryReference: number
+    marketReferenceValue: number
+  }
 }
 
 export interface OnboardingReadModel {
