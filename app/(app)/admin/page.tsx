@@ -1,28 +1,16 @@
-import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 import { AdminPanelClient } from '@/components/admin/admin-panel-client'
+
+const ADMIN_ROLES = new Set(['super_admin', 'platform_admin', 'economy_admin', 'competition_admin', 'moderator', 'support_agent', 'finance_operator', 'read_only_analyst'])
 
 export default async function AdminPanelPage() {
   const supabase = await createClient()
-
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+  if (!user) redirect('/auth/login')
 
-  // Optional: check if user has admin/mod role
-  const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
+  const role = typeof user.app_metadata?.role === 'string' ? user.app_metadata.role : null
+  if (!role || !ADMIN_ROLES.has(role)) redirect('/dashboard')
 
-  // Uncomment to restrict access:
-  // if (!profile || (profile.role !== 'admin' && profile.role !== 'moderador')) {
-  //   redirect('/dashboard')
-  // }
-
-  return (
-    <div className="mx-auto max-w-6xl py-8 px-4">
-      <AdminPanelClient />
-    </div>
-  )
+  return <AdminPanelClient role={role} />
 }
