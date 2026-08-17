@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
 import { ChevronRight, Home } from 'lucide-react'
 import type { ReactNode } from 'react'
 
@@ -25,57 +24,56 @@ export function PageHeader({
   breadcrumbs,
   actions,
 }: PageHeaderProps) {
-  const pathname = usePathname()
-
   return (
-    <div className="mb-6">
-      {/* Breadcrumbs */}
+    <header className="mb-6 space-y-3 sm:mb-7">
       {breadcrumbs && breadcrumbs.length > 0 && (
-        <nav className="mb-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+        <nav className="flex min-w-0 items-center gap-1.5 overflow-x-auto text-xs text-muted-foreground [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Link
             href="/dashboard"
-            className="flex items-center gap-1 hover:text-foreground transition-colors"
+            className="flex shrink-0 items-center gap-1 rounded-md px-1 py-1 transition-colors hover:text-foreground"
           >
             <Home className="h-3 w-3" />
-            Home
+            Início
           </Link>
           {breadcrumbs.map((crumb, i) => (
-            <span key={i} className="flex items-center gap-1.5">
-              <ChevronRight className="h-3 w-3" />
+            <span key={`${crumb.label}-${i}`} className="flex shrink-0 items-center gap-1.5">
+              <ChevronRight className="h-3 w-3 text-muted-foreground/50" />
               {crumb.href ? (
                 <Link
                   href={crumb.href}
-                  className="hover:text-foreground transition-colors"
+                  className="rounded-md px-1 py-1 transition-colors hover:text-foreground"
                 >
                   {crumb.label}
                 </Link>
               ) : (
-                <span className="text-foreground/80 font-medium">{crumb.label}</span>
+                <span className="px-1 py-1 font-medium text-foreground/80">{crumb.label}</span>
               )}
             </span>
           ))}
         </nav>
       )}
 
-      {/* Title Row */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
           {icon && (
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <div className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-primary/15 bg-primary/[.07] text-primary shadow-[inset_0_1px_0_rgba(255,255,255,.03)]">
               {icon}
             </div>
           )}
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">{title}</h1>
+          <div className="min-w-0">
+            <h1 className="clan-display text-2xl text-foreground sm:text-[1.75rem]">{title}</h1>
             {description && (
-              <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
+              <p className="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">{description}</p>
             )}
           </div>
         </div>
+
         {actions && (
-          <div className="flex items-center gap-2">{actions}</div>
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0 sm:justify-end [&_[data-slot=button]]:min-w-0 [&_[data-slot=button]]:flex-1 sm:[&_[data-slot=button]]:flex-none">
+            {actions}
+          </div>
         )}
       </div>
-    </div>
+    </header>
   )
 }
