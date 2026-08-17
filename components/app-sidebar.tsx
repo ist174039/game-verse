@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { LayoutDashboard, Shield, Coins, BarChart3, Gamepad2, Swords, Store, Users, LogOut, Menu, X, Gavel, ShieldAlert, Globe, CalendarDays, TrendingUp, PiggyBank, MessageCircle } from 'lucide-react'
+import { LayoutDashboard, Shield, Coins, BarChart3, Gamepad2, Swords, Store, Users, LogOut, Menu, X, Gavel, ShieldAlert, Globe, CalendarDays, MessageCircle } from 'lucide-react'
 import { useState } from 'react'
 
 interface NavItem { label: string; href: string; icon: React.ReactNode; badge?: string }
@@ -19,21 +19,14 @@ const mainNavItems: NavItem[] = [
   { label: 'Ranking', href: '/rankings', icon: <BarChart3 className="h-[18px] w-[18px]" /> },
 ]
 const secondaryNavItems: NavItem[] = [
-  { label: 'Economia', href: '/economy', icon: <Coins className="h-[18px] w-[18px]" /> },
-  { label: 'Comprar Gold', href: '/economy/buy', icon: <Coins className="h-[18px] w-[18px]" /> },
+  { label: 'Universos', href: '/universos', icon: <Globe className="h-[18px] w-[18px]" /> },
   { label: 'Mercado', href: '/market', icon: <Store className="h-[18px] w-[18px]" /> },
   { label: 'Leilões', href: '/market/auction', icon: <Gavel className="h-[18px] w-[18px]" /> },
-  { label: 'Social', href: '/social', icon: <Users className="h-[18px] w-[18px]" /> },
-  { label: 'Comunidades', href: '/community', icon: <Globe className="h-[18px] w-[18px]" /> },
+  { label: 'Economia', href: '/economy', icon: <Coins className="h-[18px] w-[18px]" /> },
+  { label: 'Comprar Gold', href: '/economy/buy', icon: <Coins className="h-[18px] w-[18px]" /> },
+  { label: 'Comunidade', href: '/community', icon: <Users className="h-[18px] w-[18px]" /> },
   { label: 'Chat', href: '/community/chat', icon: <MessageCircle className="h-[18px] w-[18px]" /> },
-  { label: 'Universos', href: '/universos', icon: <Globe className="h-[18px] w-[18px]" /> },
   { label: 'Calendário', href: '/calendar', icon: <CalendarDays className="h-[18px] w-[18px]" /> },
-]
-const financeNavItems: NavItem[] = [
-  { label: 'Investimentos', href: '/investimento', icon: <TrendingUp className="h-[18px] w-[18px]" /> },
-  { label: 'Património', href: '/patrimonio', icon: <PiggyBank className="h-[18px] w-[18px]" /> },
-  { label: 'Ativos', href: '/activos', icon: <Coins className="h-[18px] w-[18px]" /> },
-  { label: 'Passivos', href: '/passivos', icon: <BarChart3 className="h-[18px] w-[18px]" /> },
 ]
 const adminNavItems: NavItem[] = [
   { label: 'Admin', href: '/admin', icon: <Shield className="h-[18px] w-[18px]" /> },
@@ -58,7 +51,6 @@ export function AppSidebar({ username = 'Manager', balance = 0, isGuest = false 
     <nav className="flex-1 space-y-1 overflow-y-auto pr-1">
       <NavGroup title="Clube" items={mainNavItems} pathname={pathname} close={()=>setMobileOpen(false)} />
       <NavGroup title="Plataforma" items={secondaryNavItems} pathname={pathname} close={()=>setMobileOpen(false)} />
-      <NavGroup title="Finanças" items={financeNavItems} pathname={pathname} close={()=>setMobileOpen(false)} />
       <div className="my-3 h-px bg-white/[.05]"/><div className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-[.15em] text-muted-foreground/60">Operações restritas</div>{adminNavItems.map(item=><NavLink key={item.href} item={item} pathname={pathname} close={()=>setMobileOpen(false)} destructive />)}
     </nav>
     <div className="mt-4 border-t border-white/[.055] pt-4"><Link href="/profile" className="mb-2 flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-white/[.035]"><div className="flex h-9 w-9 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-sm font-bold text-primary">{username.charAt(0).toUpperCase()}</div><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{username}</p><p className="text-[10px] uppercase tracking-wider text-muted-foreground">Manager</p></div></Link><Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" onClick={handleLogout}><LogOut className="h-[18px] w-[18px]"/>Sair</Button></div>
