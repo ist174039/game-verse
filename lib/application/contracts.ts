@@ -16,7 +16,15 @@ export interface PlayerRepository { getMaster(id: UUID): Promise<PlayerMaster | 
 export interface CompetitionRepository { getSeason(id: UUID): Promise<Season | null>; getCompetition(id: UUID): Promise<Competition | null>; getMatch(id: UUID): Promise<Match | null>; listParticipants(competitionId: UUID): Promise<CompetitionParticipant[]>; listStandings(competitionId: UUID): Promise<LeagueStanding[]>; listClubMatches(clubId: UUID): Promise<Match[]>; register(input: { competitionId: UUID; idempotencyKey: string }): Promise<CompetitionRegistration>; submitResult(input: { matchId: UUID; homeScore: number; awayScore: number; idempotencyKey: string }): Promise<Match>; confirmResult(input: { matchId: UUID; idempotencyKey: string }): Promise<MatchSettlementReceipt>; openDispute(input: { matchId: UUID; reason: string }): Promise<MatchDispute> }
 export interface MarketRepository { getListing(id: UUID): Promise<MarketListing | null>; listActive(universeId: UUID): Promise<MarketListing[]>; listBids(listingId: UUID): Promise<AuctionBid[]>; createDirectListing(input: { universePlayerId: UUID; askingPrice: number; idempotencyKey: string }): Promise<MarketListing>; buyDirectListing(input: { listingId: UUID; idempotencyKey: string }): Promise<TransferReceipt>; placeAuctionBid(input: { listingId: UUID; amount: number; idempotencyKey: string }): Promise<AuctionBid>; settleAuction(input: { listingId: UUID; idempotencyKey: string }): Promise<TransferReceipt>; cancelListing(input: { listingId: UUID; idempotencyKey: string }): Promise<void> }
 export interface LedgerRepository { getTransactionByIdempotencyKey(key: string): Promise<LedgerTransaction | null> }
-export interface ClubEconomyRepository { listSponsorships(clubId: UUID): Promise<SponsorshipContract[]>; listLoans(clubId: UUID): Promise<ClubLoan[]>; listFinancialCycles(clubId: UUID): Promise<FinancialCycle[]>; financeWithGold(input: { clubId: UUID; goldAmount: number; idempotencyKey: string }): Promise<GoldToSilverFinancingReceipt>; originateLoan(input: { clubId: UUID; principal: number; idempotencyKey: string }): Promise<ClubLoan>; repayLoanInstallment(input: { loanId: UUID; idempotencyKey: string }): Promise<LoanRepaymentReceipt> }
+export interface ClubEconomyRepository {
+  listSponsorships(clubId: UUID): Promise<SponsorshipContract[]>
+  listLoans(clubId: UUID): Promise<ClubLoan[]>
+  listFinancialCycles(clubId: UUID): Promise<FinancialCycle[]>
+  financeWithGold(input: { clubId: UUID; goldAmount: number; idempotencyKey: string }): Promise<GoldToSilverFinancingReceipt>
+  originateLoan(input: { clubId: UUID; principal: number; idempotencyKey: string }): Promise<ClubLoan>
+  repayLoanInstallment(input: { loanId: UUID; idempotencyKey: string }): Promise<LoanRepaymentReceipt>
+  acceptSponsorship(input:{contractId:UUID;idempotencyKey:string}):Promise<SponsorshipContract>
+}
 export interface RetentionRepository {
   listActiveMissions(userId: UUID): Promise<Array<{ definition: MissionDefinition; progress: UserMission | null }>>
   claimDailyReward(): Promise<DailyRewardClaim>
@@ -54,4 +62,8 @@ export interface GovernanceRepository {
   reverseMatchSettlement(input: { matchId: UUID; reason: string; idempotencyKey: string }): Promise<Record<string, unknown>>
   reverseLedgerTransaction(input: { transactionId: UUID; reason: string; idempotencyKey: string }): Promise<UUID>
 }
-export interface OperationsRepository { listClubLiabilities(clubId: UUID): Promise<ClubLiability[]>; listMatchFinancialEvents(clubId: UUID, limit?: number): Promise<MatchFinancialEvent[]> }
+export interface OperationsRepository {
+  listClubLiabilities(clubId: UUID): Promise<ClubLiability[]>
+  listMatchFinancialEvents(clubId: UUID, limit?: number): Promise<MatchFinancialEvent[]>
+  payLiability(input:{liabilityId:UUID;amount:number;idempotencyKey:string}):Promise<ClubLiability>
+}

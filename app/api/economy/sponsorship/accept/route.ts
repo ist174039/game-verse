@@ -1,0 +1,5 @@
+import {NextResponse} from 'next/server'
+import {createClient} from '@/lib/supabase/server'
+import {createApplicationServices} from '@/lib/infrastructure/repositories/supabase/factory'
+export const runtime='nodejs'
+export async function POST(request:Request){const supabase=await createClient();const{data:{user}}=await supabase.auth.getUser();if(!user||user.is_anonymous)return NextResponse.json({error:'authentication_required'},{status:401});let body:{contractId?:unknown;idempotencyKey?:unknown};try{body=await request.json()}catch{return NextResponse.json({error:'invalid_json'},{status:400})}const contractId=typeof body.contractId==='string'?body.contractId:'';const key=typeof body.idempotencyKey==='string'?body.idempotencyKey:'';if(!contractId||key.length<3)return NextResponse.json({error:'invalid_sponsorship_request'},{status:400});try{const contract=await createApplicationServices(supabase).clubEconomy.acceptSponsorship({contractId,idempotencyKey:key});return NextResponse.json({contract})}catch(e){return NextResponse.json({error:e instanceof Error?e.message:'sponsorship_accept_failed'},{status:409})}}
