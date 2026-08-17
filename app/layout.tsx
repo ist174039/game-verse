@@ -4,7 +4,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Geist_Mono } from 'next/font/google'
 import './globals.css'
 
-const inter = Inter({ 
+const inter = Inter({
   subsets: ['latin'],
   variable: '--font-geist-sans',
 })
@@ -15,9 +15,10 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'GameVerse - Football Gaming Platform',
-  description: 'Build your football empire. Manage your club, compete in tournaments, and rise through the ranks.',
-  generator: 'v0.app',
+  title: 'Clã das Sombras — Clube, Competição e Evolução',
+  description:
+    'Constrói o teu clube, compete, evolui e conquista prestígio no universo Clã das Sombras.',
+  generator: 'Clã das Sombras',
   icons: {
     icon: [
       {
@@ -38,7 +39,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#f59e0b',
+  themeColor: '#d99a18',
   width: 'device-width',
   initialScale: 1,
 }
@@ -49,11 +50,9 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${geistMono.variable} bg-background`}>
+    <html lang="pt" className={`${inter.variable} ${geistMono.variable} bg-background`}>
       <body className="font-sans antialiased">
-        <LanguageProvider>
-          {children}
-        </LanguageProvider>
+        <LanguageProvider>{children}</LanguageProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
