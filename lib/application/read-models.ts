@@ -1,11 +1,9 @@
-import type { Club, Match, PlayerContract, PlayerMaster, Universe, UniversePlayer, UniverseRole, UserProfile, UUID } from '@/lib/domain/core'
+import type { Club, Match, MarketListing, PlayerContract, PlayerMaster, Universe, UniversePlayer, UniverseRole, UserProfile, UUID } from '@/lib/domain/core'
 import type { ClubLoan, FinancialCycle, SponsorshipContract } from '@/lib/domain/club-economy'
 import type { CompetitionParticipant, LeagueStanding } from '@/lib/domain/competition'
 import type { JournalArticle, Notification } from '@/lib/domain/communications'
 import type { ClubLiability } from '@/lib/domain/operations'
-import type { MarketListing } from '@/lib/domain/core'
 
-/** Stable projection consumed by the authenticated dashboard. */
 export interface DashboardReadModel {
   user: UserProfile
   universe: Universe
@@ -62,6 +60,23 @@ export interface SquadReadModel {
     salaryReference: number
     marketReferenceValue: number
   }
+}
+
+export interface MarketListingReadModel {
+  listing: MarketListing
+  asset: UniversePlayer
+  player: PlayerMaster
+  sellerClub: Club
+  highestBid: number | null
+  bidCount: number
+}
+
+export interface MarketReadModel {
+  universe: Universe
+  buyerClub: Club
+  silverBalance: number
+  directListings: MarketListingReadModel[]
+  auctionListings: MarketListingReadModel[]
 }
 
 export interface OnboardingReadModel {

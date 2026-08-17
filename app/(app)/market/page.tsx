@@ -1,27 +1,22 @@
 import { createClient } from '@/lib/supabase/server'
+import { createApplicationServices } from '@/lib/infrastructure/repositories/supabase/factory'
+import { redirect } from 'next/navigation'
 import { MarketPageClient } from '@/components/market/market-page-client'
-import type { MarketListingWithSeller } from '@/lib/types'
 
-export default async function MarketPage() {
+export default async function MarketPage({ searchParams }: { searchParams: Promise<{ universe?: string }> }) {
   const supabase = await createClient()
-
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+  if (!user) redirect('/auth/login')
 
-  const [{ data: listings }, { data: wallet }] = await Promise.all([
-    supabase
-      .from('market_listing')
-      .select('*, seller:seller_id(id, username, avatar_url)')
-      .eq('status', 'active')
-      .order('created_at', { ascending: false }),
-    supabase.from('wallet').select('balance').eq('user_id', user.id).single(),
-  ])
+  const services = createApplicationServices(supabase)
+  const directory = await services.reads.universeDirectory.load(user.id)
+  const requestedUniverseId = (await searchParams).universe
+  const selected = (requestedUniverseId ? directory.entries.find(entry => entry.universe.id === requestedUniverseId && entry.club) : null)
+    ?? directory.entries.find(entry => entry.club)
+  if (!selected?.club) redirect('/onboarding')
 
-  return (
-    <MarketPageClient
-      listings={(listings || []) as unknown as MarketListingWithSeller[]}
-      userId={user.id}
-      balance={wallet?.balance || 0}
-    />
-  )
+  const market = await services.reads.market.load(user.id, selected.universe.id)
+  if (!market) redirect('/onboarding')
+
+  return <MarketPageClient market={market} />
 }
