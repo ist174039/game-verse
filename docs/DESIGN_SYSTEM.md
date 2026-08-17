@@ -48,8 +48,38 @@ Glow só em CTA premium, seleção, troféus, ranking, moeda, rewards e momentos
 - Display/competition: peso 700–900, tracking compacto; resultados, títulos, ranking e conquistas.
 - Interface: Inter/Geist legível; navegação, tabelas, filtros, gestão e admin.
 
+## Buttons and actions
+- Todo botão de ação deve usar `components/ui/button.tsx`. Não criar CTAs com classes isoladas quando uma variante existente resolve o caso.
+- `default`: ação principal da página/fluxo. Usar no máximo uma ação dominante por contexto visual.
+- `outline`: ação secundária importante.
+- `secondary`: ações operacionais neutras.
+- `ghost`: navegação/utilidades de baixo peso.
+- `destructive`: operações reversíveis ou perigosas; nunca usar gold para ações destrutivas.
+- Altura táctil alvo em mobile: 44px para ação principal; icon buttons não devem ficar abaixo de 40px salvo controlos densos e não críticos.
+- Ações no `PageHeader` ocupam a largura disponível no mobile e voltam ao tamanho natural no desktop.
+- Não esconder a única ação principal de uma página só porque o viewport é pequeno.
+- Grupos com 3+ ações devem priorizar a primária e mover ações secundárias para menu/drawer quando necessário.
+- Loading deve manter largura e posição do botão para evitar layout shift.
+- Disabled precisa de parecer indisponível sem perder completamente legibilidade.
+
+## Modal and confirmation policy
+- **Proibido** usar `window.alert`, `alert()`, `window.confirm` ou `confirm()` na aplicação.
+- Feedback que exige leitura/decisão usa `Dialog`/`ConfirmationDialog`.
+- No mobile, o mesmo componente apresenta-se como bottom sheet; no desktop como modal central.
+- Operações destrutivas mostram contexto, consequência e dois caminhos claros: cancelar e confirmar.
+- Nunca mostrar apenas “Tem a certeza?” sem explicar o objeto e o impacto da ação.
+- Erros de formulário inline continuam junto ao campo; erros operacionais que bloqueiam o fluxo podem usar modal.
+- Toast pode ser usado apenas para feedback transitório não crítico, nunca para consentimento ou decisões irreversíveis.
+
+## Forms and touch targets
+- Inputs e selects têm 44px no mobile e tipografia de 16px para evitar zoom automático no iOS.
+- Elementos clicáveis devem ter spacing suficiente para uso com polegar.
+- Select items e menus devem ter altura mínima confortável para toque.
+- Formulários longos no mobile devem ser divididos em secções, steps ou sheets; evitar uma única parede de campos.
+
 ## Page patterns
-- App Shell: sidebar desktop 272px; topbar + drawer em mobile.
+- App Shell desktop: sidebar 272px.
+- App Shell mobile: topbar compacta + bottom navigation para ações primárias + bottom sheet “Mais” para navegação completa.
 - Public/search: PageHeader → Search/Filters → Results → Pagination.
 - Entity detail: Identity Hero → primary status/actions → tabs/sections → contextual side rail quando houver espaço.
 - Admin: header compacto → KPI/alerts → filters → dense table/work queue → contextual actions.
@@ -67,7 +97,18 @@ Normalizar antes de páginas: AppShell, PageHeader, SectionHeader, Button, Input
 Mesma marca, menor teatralidade: fundos dark, gold em seleção/ações importantes, alta densidade, filtros fortes, tabelas legíveis, audit trail e ações sensíveis claramente separadas.
 
 ## Responsive
-Mobile reorganiza, não encolhe desktop. Priorizar contexto + ação principal, usar drawer/bottom sheet, converter tabelas quando necessário e preservar identidade do clube sem desperdiçar viewport.
+Mobile reorganiza, não encolhe desktop. Priorizar contexto + ação principal, usar modal/bottom sheet, converter tabelas quando necessário e preservar identidade do clube sem desperdiçar viewport.
+
+### Mobile navigation
+- Bottom navigation: Início, Clube, Jogar, Competições e Mais.
+- “Mais” abre um bottom sheet com navegação secundária, economia, mercado, comunidade, perfil e operações permitidas.
+- Respeitar `safe-area-inset-bottom` em dispositivos com gesture bar/notch.
+- O conteúdo da aplicação deve reservar espaço para a bottom navigation; nada importante pode ficar escondido atrás dela.
+
+### Mobile tables
+- Não reduzir simplesmente uma tabela larga até ficar ilegível.
+- Quando comparação entre colunas não é essencial, converter linha em item/card compacto.
+- Quando comparação é essencial, manter tabela com scroll horizontal explícito, primeira coluna sticky quando fizer sentido e ações acessíveis sem scroll extremo.
 
 ## Enforcement
-Nenhuma página cria cores arbitrárias. Novos tokens entram primeiro em `app/globals.css`. Componentes reutilizáveis precedem implementações específicas de páginas.
+Nenhuma página cria cores arbitrárias. Novos tokens entram primeiro em `app/globals.css`. Componentes reutilizáveis precedem implementações específicas de páginas. Qualquer novo fluxo com confirmação deve passar pelo sistema de modal; qualquer nova ação deve verificar primeiro as variantes globais do `Button`.
