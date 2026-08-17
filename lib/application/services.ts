@@ -13,6 +13,7 @@ import type {
   SocialRepository,
   UniverseRepository,
 } from './contracts'
+import type { DashboardReadRepository, OnboardingReadRepository, UniverseOverviewReadRepository } from './read-repositories'
 
 /** User-facing dependency container. Every repository is RLS-scoped to the authenticated user. */
 export interface ApplicationServices {
@@ -28,6 +29,11 @@ export interface ApplicationServices {
   communications: CommunicationRepository
   social: SocialRepository
   operations: OperationsRepository
+  reads: {
+    dashboard: DashboardReadRepository
+    onboarding: OnboardingReadRepository
+    universeOverview: UniverseOverviewReadRepository
+  }
 }
 
 /** Backoffice-only extension. Must be created with a server-only service-role client after RBAC checks. */

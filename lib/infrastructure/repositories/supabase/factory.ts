@@ -12,6 +12,7 @@ import { SupabaseCommunicationRepository } from './communication-repository'
 import { SupabaseSocialRepository } from './social-repository'
 import { SupabaseOperationsRepository } from './operations-repository'
 import { SupabaseGovernanceRepository } from './governance-repository'
+import { SupabaseDashboardReadRepository, SupabaseOnboardingReadRepository, SupabaseUniverseOverviewReadRepository } from './read-repositories'
 
 /** Create RLS-scoped repositories for the authenticated application request. */
 export function createApplicationServices(client: SupabaseClient): ApplicationServices {
@@ -28,6 +29,11 @@ export function createApplicationServices(client: SupabaseClient): ApplicationSe
     communications: new SupabaseCommunicationRepository(client),
     social: new SupabaseSocialRepository(client),
     operations: new SupabaseOperationsRepository(client),
+    reads: {
+      dashboard: new SupabaseDashboardReadRepository(client),
+      onboarding: new SupabaseOnboardingReadRepository(client),
+      universeOverview: new SupabaseUniverseOverviewReadRepository(client),
+    },
   }
 }
 
