@@ -3,7 +3,7 @@ import type { LedgerTransaction } from '@/lib/domain/economy'
 import type { AuctionBid, PlayerProviderSnapshot, TransferReceipt, UniversePlayerValuation } from '@/lib/domain/player-market'
 import type { CompetitionParticipant, LeagueStanding, MatchDispute, MatchSettlementReceipt } from '@/lib/domain/competition'
 import type { ClubLoan, FinancialCycle, GoldToSilverFinancingReceipt, InfrastructureType, InfrastructureUpgradeReceipt, LoanRepaymentReceipt, SponsorshipContract } from '@/lib/domain/club-economy'
-import type { AchievementDefinition, BronzeStoreItem, DailyRewardClaim, MissionDefinition, UserAchievement, UserMission } from '@/lib/domain/retention'
+import type { AchievementDefinition, BronzePurchase, BronzeStoreItem, DailyRewardClaim, MissionDefinition, UserAchievement, UserMission } from '@/lib/domain/retention'
 import type { JournalArticle, Notification } from '@/lib/domain/communications'
 import type { AdminAuditLog, CaseStatus, EconomicFreeze, FeatureFlag, FreezeScope, ModerationCase, PlatformConfig, SupportTicket, TicketNote, TicketStatus } from '@/lib/domain/governance'
 import type { ChatMessage, Community, CommunityConversation, CommunityMembership, CommunityPost, CommunityVisibility, DirectConversation } from '@/lib/domain/social'
@@ -17,7 +17,15 @@ export interface CompetitionRepository { getSeason(id: UUID): Promise<Season | n
 export interface MarketRepository { getListing(id: UUID): Promise<MarketListing | null>; listActive(universeId: UUID): Promise<MarketListing[]>; listBids(listingId: UUID): Promise<AuctionBid[]>; createDirectListing(input: { universePlayerId: UUID; askingPrice: number; idempotencyKey: string }): Promise<MarketListing>; buyDirectListing(input: { listingId: UUID; idempotencyKey: string }): Promise<TransferReceipt>; placeAuctionBid(input: { listingId: UUID; amount: number; idempotencyKey: string }): Promise<AuctionBid>; settleAuction(input: { listingId: UUID; idempotencyKey: string }): Promise<TransferReceipt>; cancelListing(input: { listingId: UUID; idempotencyKey: string }): Promise<void> }
 export interface LedgerRepository { getTransactionByIdempotencyKey(key: string): Promise<LedgerTransaction | null> }
 export interface ClubEconomyRepository { listSponsorships(clubId: UUID): Promise<SponsorshipContract[]>; listLoans(clubId: UUID): Promise<ClubLoan[]>; listFinancialCycles(clubId: UUID): Promise<FinancialCycle[]>; financeWithGold(input: { clubId: UUID; goldAmount: number; idempotencyKey: string }): Promise<GoldToSilverFinancingReceipt>; originateLoan(input: { clubId: UUID; principal: number; idempotencyKey: string }): Promise<ClubLoan>; repayLoanInstallment(input: { loanId: UUID; idempotencyKey: string }): Promise<LoanRepaymentReceipt> }
-export interface RetentionRepository { listActiveMissions(userId: UUID): Promise<Array<{ definition: MissionDefinition; progress: UserMission | null }>>; claimDailyReward(): Promise<DailyRewardClaim>; listAchievements(userId: UUID): Promise<Array<{ definition: AchievementDefinition; unlocked: UserAchievement | null }>>; listBronzeStore(): Promise<BronzeStoreItem[]> }
+export interface RetentionRepository {
+  listActiveMissions(userId: UUID): Promise<Array<{ definition: MissionDefinition; progress: UserMission | null }>>
+  claimDailyReward(): Promise<DailyRewardClaim>
+  claimMission(userMissionId: UUID, idempotencyKey: string): Promise<UserMission>
+  listAchievements(userId: UUID): Promise<Array<{ definition: AchievementDefinition; unlocked: UserAchievement | null }>>
+  listBronzeStore(): Promise<BronzeStoreItem[]>
+  listBronzePurchases(userId: UUID): Promise<BronzePurchase[]>
+  buyBronzeItem(itemId: UUID, idempotencyKey: string): Promise<BronzePurchase>
+}
 export interface CommunicationRepository { listJournal(universeId: UUID, limit?: number): Promise<JournalArticle[]>; listNotifications(userId: UUID, limit?: number): Promise<Notification[]>; markNotificationRead(notificationId: UUID): Promise<void> }
 export interface SocialRepository {
   listCommunities(userId:UUID):Promise<Community[]>
