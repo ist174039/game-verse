@@ -1,237 +1,64 @@
 'use client'
 
-import { useState } from 'react'
-import { Globe, Search, Check, Plus, ArrowRight } from 'lucide-react'
+import { Crown, Globe, LockKeyhole, Search, ShieldCheck, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { Progress } from '@/components/ui/progress'
 
-interface UniversosClientProps {
-  userId: string
-}
+interface UniversosClientProps { userId: string }
 
-const myUniverses = [
-  {
-    name: 'Liga Portugal Virtual',
-    icon: '🇵🇹',
-    players: 128,
-    ranking: 42,
-    status: 'active',
-    description: 'Competição virtual da Liga Portugal Betclic',
-    tournaments: 3,
-  },
-  {
-    name: 'GameVerse Global',
-    icon: '🌍',
-    players: 15000,
-    ranking: 1890,
-    status: 'active',
-    description: 'The main GameVerse universe',
-    tournaments: 24,
-  },
+const policies = [
+  ['PUBLIC', 'Entrada pública'],
+  ['APPLICATION', 'Entrada por candidatura'],
+  ['INVITE_ONLY', 'Apenas convite'],
+  ['PRIVATE', 'Privado'],
 ]
 
-const exploreUniverses = [
-  {
-    name: 'Champions Cup S4',
-    icon: '🏆',
-    players: 64,
-    ranking: '-',
-    status: 'upcoming',
-    description: 'Elite tournament series — Season 4',
-    tournaments: 1,
-  },
-  {
-    name: 'Brasileirão Virtual',
-    icon: '🇧🇷',
-    players: 256,
-    ranking: 15,
-    status: 'open',
-    description: 'Campeonato brasileiro de futebol virtual',
-    tournaments: 2,
-  },
-  {
-    name: 'Premier League Fantasy',
-    icon: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-    players: 512,
-    ranking: 88,
-    status: 'active',
-    description: 'EPL-inspired fantasy football universe',
-    tournaments: 5,
-  },
-]
-
-export function UniversosClient({ userId }: UniversosClientProps) {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [activeUniverse, setActiveUniverse] = useState('Liga Portugal Virtual')
-
+export function UniversosClient({ userId: _userId }: UniversosClientProps) {
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Globe className="h-6 w-6 text-chart-4" />
-            Universos
-          </h1>
-          <p className="text-muted-foreground">Explore and manage your GameVerse universes</p>
+    <div className="space-y-7">
+      <section className="brand-watermark rounded-2xl border border-white/[0.07] bg-[#0b0b0b] px-5 py-6 sm:px-7">
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div><p className="clan-kicker">Universos</p><h1 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">Um clube por universo. Uma carreira sem fronteiras.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">Cada universo isola clubes, Silver, jogadores, mercado, temporadas e competições. A identidade do manager continua global.</p></div>
+          <Button disabled><LockKeyhole className="mr-2 h-4 w-4" />Criar universo</Button>
         </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Universe
-        </Button>
-      </div>
+      </section>
 
-      {/* Active Universe Indicator */}
-      <Card className="p-3 bg-gradient-to-r from-amber-900/20 to-orange-900/20 border-amber-500/30">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500/20">
-              <Check className="h-4 w-4 text-amber-500" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Active Universe</p>
-              <p className="text-sm font-bold text-foreground">{activeUniverse}</p>
-            </div>
+      <section className="grid gap-5 xl:grid-cols-[1.2fr_.8fr]">
+        <article className="overflow-hidden rounded-2xl border border-primary/18 bg-[radial-gradient(circle_at_80%_0%,rgba(245,191,22,.09),transparent_35%),#0b0b0b] p-6">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex gap-4"><div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-primary/20 bg-primary/[0.07] text-primary"><Crown className="h-6 w-6" /></div><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Universo oficial</p><h2 className="mt-1 text-2xl font-black">Universo Principal</h2><p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">Governado pela plataforma, regras fixas, Liga Oficial, Taça do Clã, Supertaça, mercado e financiamento limitado.</p></div></div>
+            <span className="w-fit rounded-md border border-primary/20 bg-primary/[0.06] px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.14em] text-primary">PLATFORM OWNER</span>
           </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Badge variant="outline" className="text-[10px]">Rank #42</Badge>
-            <Badge className="bg-green-500 text-white border-0 text-[10px]">Active</Badge>
+          <div className="mt-7 grid gap-px overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.06] sm:grid-cols-4">
+            <UniverseDatum label="Economia" value="STANDARD" />
+            <UniverseDatum label="Financiamento" value="LIMITED" />
+            <UniverseDatum label="Temporadas" value="Sincronizadas" />
+            <UniverseDatum label="Moderação" value="Plataforma" />
           </div>
-        </div>
-      </Card>
+        </article>
 
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search universes..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9"
-        />
-      </div>
+        <aside className="clan-panel-neutral rounded-2xl p-5">
+          <div className="flex items-center gap-2"><Search className="h-4 w-4 text-primary" /><p className="text-sm font-bold">Explorar universos</p></div>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">A descoberta real será alimentada pelo novo schema. Os universos fictícios que existiam nesta página foram removidos.</p>
+          <div className="relative mt-4"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input disabled placeholder="Nome, idioma, vagas, perfil económico…" className="pl-9" /></div>
+          <div className="mt-4 flex flex-wrap gap-2">{['Público', 'Com vagas', 'Competitivo', 'Casual', 'PT'].map(tag => <span key={tag} className="rounded-md border border-white/[0.06] px-2 py-1 text-[10px] text-muted-foreground">{tag}</span>)}</div>
+        </aside>
+      </section>
 
-      <Tabs defaultValue="mine">
-        <TabsList className="w-full justify-start">
-          <TabsTrigger value="mine"><Globe className="mr-1 h-3 w-3" />Os Meus</TabsTrigger>
-          <TabsTrigger value="explore"><Search className="mr-1 h-3 w-3" />Explorar</TabsTrigger>
-          <TabsTrigger value="create"><Plus className="mr-1 h-3 w-3" />Criar</TabsTrigger>
-        </TabsList>
+      <section className="grid gap-5 lg:grid-cols-3">
+        <GovernanceBlock icon={Globe} title="Lifecycle" items={['DRAFT → CONFIGURING', 'OPEN_FOR_MEMBERS → ACTIVE', 'SEASON_RUNNING → SEASON_CLOSED', 'ARCHIVED / SUSPENDED']} />
+        <GovernanceBlock icon={Users} title="Governance" items={['OWNER', 'ADMIN', 'MODERATOR', 'MEMBER']} />
+        <GovernanceBlock icon={ShieldCheck} title="Entrada" items={policies.map(([code, label]) => `${code} · ${label}`)} />
+      </section>
 
-        {/* Tab 1: My Universes */}
-        <TabsContent value="mine" className="space-y-3">
-          {myUniverses.map((universe) => (
-            <Card key={universe.name} className="p-4 hover:border-primary/50 transition-colors cursor-pointer">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-2xl">
-                    {universe.icon}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-base font-bold text-foreground">{universe.name}</h3>
-                      {activeUniverse === universe.name && (
-                        <Badge className="bg-green-500 text-white border-0 text-[10px]">Active</Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">{universe.description}</p>
-                    <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                      <span>👥 {universe.players.toLocaleString()} players</span>
-                      <span>🏆 {universe.tournaments} tournaments</span>
-                      <span>📊 Rank #{universe.ranking}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  {activeUniverse !== universe.name && (
-                    <Button size="sm" variant="outline">
-                      <Check className="mr-1 h-3 w-3" /> Select
-                    </Button>
-                  )}
-                  <Button size="sm" variant="ghost">
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </TabsContent>
-
-        {/* Tab 2: Explore */}
-        <TabsContent value="explore" className="space-y-3">
-          {exploreUniverses.map((universe) => (
-            <Card key={universe.name} className="p-4 hover:border-primary/50 transition-colors cursor-pointer">
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-secondary text-2xl">
-                    {universe.icon}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-base font-bold text-foreground">{universe.name}</h3>
-                      <Badge className={`text-[10px] border-0 text-white ${
-                        universe.status === 'active' ? 'bg-green-500' :
-                        universe.status === 'open' ? 'bg-blue-500' : 'bg-amber-500'
-                      }`}>
-                        {universe.status === 'active' ? 'Active' : universe.status === 'open' ? 'Open' : 'Upcoming'}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-0.5">{universe.description}</p>
-                    <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                      <span>👥 {universe.players.toLocaleString()} players</span>
-                      <span>🏆 {universe.tournaments} tournaments</span>
-                      {universe.ranking !== '-' && <span>📊 Rank #{universe.ranking}</span>}
-                    </div>
-                  </div>
-                </div>
-                <Button size="sm">
-                  <Plus className="mr-1 h-3 w-3" /> Join
-                </Button>
-              </div>
-            </Card>
-          ))}
-        </TabsContent>
-
-        {/* Tab 3: Create */}
-        <TabsContent value="create" className="space-y-4">
-          <Card className="p-6">
-            <h3 className="text-lg font-bold text-foreground mb-4">Create New Universe</h3>
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs text-muted-foreground">Universe Name</label>
-                <Input placeholder="e.g. LaLiga Virtual" />
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground">Description</label>
-                <textarea
-                  className="mt-1 w-full rounded-lg border border-border bg-background p-3 text-sm outline-none focus:border-primary resize-none"
-                  rows={3}
-                  placeholder="Describe your universe..."
-                />
-              </div>
-              <div>
-                <label className="text-xs text-muted-foreground">Category</label>
-                <select className="mt-1 w-full rounded-lg border border-border bg-background p-2.5 text-sm">
-                  <option>Regional League</option>
-                  <option>Themed Cup</option>
-                  <option>Fantasy League</option>
-                  <option>Custom</option>
-                </select>
-              </div>
-              <div className="flex gap-2">
-                <Button className="flex-1">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Universe
-                </Button>
-                <Button variant="outline" className="flex-1">Cancel</Button>
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <section className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-5 sm:p-6">
+        <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Regra estrutural</p>
+        <div className="mt-4 grid gap-4 md:grid-cols-3"><Rule title="Utilizador" text="Identidade global, Gold, Bronze, Manager Level e reputação." /><Rule title="Universo" text="Contexto competitivo, regras, temporadas, mercado e governance." /><Rule title="Clube" text="Um por utilizador em cada universo, com Silver e património isolados." /></div>
+      </section>
     </div>
   )
 }
+
+function UniverseDatum({ label, value }: { label: string; value: string }) { return <div className="bg-[#0b0b0b] p-3"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{label}</p><p className="mt-1 text-xs font-bold text-foreground">{value}</p></div> }
+function GovernanceBlock({ icon: Icon, title, items }: { icon: typeof Globe; title: string; items: string[] }) { return <article className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-5"><Icon className="h-5 w-5 text-primary" /><h2 className="mt-4 text-lg font-black">{title}</h2><div className="mt-3 space-y-2">{items.map(item => <p key={item} className="text-xs leading-5 text-muted-foreground">{item}</p>)}</div></article> }
+function Rule({ title, text }: { title: string; text: string }) { return <div className="border-t border-white/[0.07] pt-4"><p className="text-sm font-bold text-primary">{title}</p><p className="mt-2 text-xs leading-5 text-muted-foreground">{text}</p></div> }
