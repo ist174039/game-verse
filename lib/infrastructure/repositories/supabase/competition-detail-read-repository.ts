@@ -14,7 +14,7 @@ const mapMatch = (r:any):Match => ({id:r.id,universeId:r.universe_id,competition
 const mapParticipant=(r:any):CompetitionParticipant=>({id:r.id,competitionId:r.competition_id,clubId:r.club_id,seed:r.seed,status:r.status,joinedAt:r.joined_at})
 const mapRound=(r:any):CompetitionRound=>({id:r.id,competitionId:r.competition_id,roundNumber:n(r.round_number),name:r.name,startsAt:r.starts_at,endsAt:r.ends_at,status:r.status})
 const mapStanding=(r:any):LeagueStanding=>({competitionId:r.competition_id,clubId:r.club_id,played:n(r.played),won:n(r.won),drawn:n(r.drawn),lost:n(r.lost),goalsFor:n(r.goals_for),goalsAgainst:n(r.goals_against),points:n(r.points),position:r.position===null?null:n(r.position),updatedAt:r.updated_at})
-const mapRegistration=(r:any):CompetitionRegistration=>({id:r.id,competitionId:r.competition_id,clubId:r.club_id,state:r.state,registeredAt:r.registered_at,approvedAt:r.approved_at})
+const mapRegistration=(r:any):CompetitionRegistration=>({id:r.id,competitionId:r.competition_id,clubId:r.club_id,state:r.state,registeredAt:r.registered_at,approvedAt:r.approved_at,entryFeePaid:n(r.entry_fee_paid),ledgerTransactionId:r.ledger_transaction_id??null,idempotencyKey:r.idempotency_key??null})
 const mapDivision=(r:any):CompetitionDivision=>({id:r.id,competitionId:r.competition_id,code:r.code,name:r.name,level:n(r.level),capacity:r.capacity===null?null:n(r.capacity),promotionSlots:n(r.promotion_slots),relegationSlots:n(r.relegation_slots),metadata:r.metadata??{}})
 const mapTie=(r:any):CupTie=>({id:r.id,competitionId:r.competition_id,roundNumber:n(r.round_number),tieNumber:n(r.tie_number),homeClubId:r.home_club_id,awayClubId:r.away_club_id,matchId:r.match_id,winnerClubId:r.winner_club_id,state:r.state})
 

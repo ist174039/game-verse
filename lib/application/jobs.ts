@@ -1,6 +1,7 @@
 export interface InternalJobResult {
   processedEvents: number
   expiredListings: number
+  defaultedLoans: number
 }
 
 export interface InternalJobsRepository {

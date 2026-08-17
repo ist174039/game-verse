@@ -9,7 +9,7 @@ const n = (value: unknown) => Number(value ?? 0)
 const mapUniverse = (r: any): Universe => ({ id:r.id, kind:r.kind, name:r.name, slug:r.slug, description:r.description, ownerUserId:r.owner_user_id, state:r.state, accessPolicy:r.access_policy, economicProfile:r.economic_profile, financingPolicy:r.financing_policy, startingSilver:n(r.starting_silver), externalFinancingLimitPct:n(r.external_financing_limit_pct), marketFeePct:n(r.market_fee_pct), auctionFeePct:n(r.auction_fee_pct), minSquadSize:n(r.min_squad_size), maxSquadSize:n(r.max_squad_size), createdAt:r.created_at, updatedAt:r.updated_at })
 const mapClub = (r:any): Club => ({ id:r.id, universeId:r.universe_id, userId:r.user_id, name:r.name, motto:r.motto, logoUrl:r.logo_url, prestige:n(r.prestige), fans:n(r.fans), elo:n(r.elo), reputationScore:n(r.reputation_score), createdAt:r.created_at, updatedAt:r.updated_at })
 const mapSponsor = (r:any): SponsorshipContract => ({ id:r.id, universeId:r.universe_id, clubId:r.club_id, name:r.name, state:r.state, signingBonus:n(r.signing_bonus), periodicPayment:n(r.periodic_payment), objectiveBonus:n(r.objective_bonus), objectives:r.objectives ?? {}, startsAt:r.starts_at, endsAt:r.ends_at })
-const mapLoan = (r:any): ClubLoan => ({ id:r.id, universeId:r.universe_id, clubId:r.club_id, principal:n(r.principal), outstandingPrincipal:n(r.outstanding_principal), interestRatePct:n(r.interest_rate_pct), installments:n(r.installments), installmentsPaid:n(r.installments_paid), state:r.state, originatedAt:r.originated_at, nextPaymentAt:r.next_payment_at })
+const mapLoan = (r:any): ClubLoan => ({ id:r.id, universeId:r.universe_id, clubId:r.club_id, principal:n(r.principal), outstandingPrincipal:n(r.outstanding_principal), interestRatePct:n(r.interest_rate_pct), installments:n(r.installments), installmentsPaid:n(r.installments_paid), state:r.state, originatedAt:r.originated_at, nextPaymentAt:r.next_payment_at, totalInterest:n(r.total_interest), outstandingInterest:n(r.outstanding_interest), totalRepaid:n(r.total_repaid) })
 const mapCycle = (r:any): FinancialCycle => ({ id:r.id, clubId:r.club_id, cycleKey:r.cycle_key, payroll:n(r.payroll), maintenance:n(r.maintenance), matchOperatingCost:n(r.match_operating_cost), sponsorshipIncome:n(r.sponsorship_income), stadiumIncome:n(r.stadium_income), otherIncome:n(r.other_income), netResult:n(r.net_result), settledAt:r.settled_at })
 const mapLiability = (r:any): ClubLiability => ({ id:r.id, clubId:r.club_id, liabilityType:r.liability_type, referenceType:r.reference_type, referenceId:r.reference_id, amount:n(r.amount), outstandingAmount:n(r.outstanding_amount), state:r.state, dueAt:r.due_at, createdAt:r.created_at, updatedAt:r.updated_at })
 
@@ -90,7 +90,7 @@ export class SupabaseEconomyReadRepository implements EconomyReadRepository {
       cycles,
       movements,
       totals: {
-        activeLoanPrincipal: activeLoans.reduce((sum, loan) => sum + loan.outstandingPrincipal, 0),
+        activeLoanPrincipal: activeLoans.reduce((sum, loan) => sum + loan.outstandingPrincipal + loan.outstandingInterest, 0),
         openLiabilities: openLiabilities.reduce((sum, item) => sum + item.outstandingAmount, 0),
         activeSponsorshipPeriodicIncome: activeSponsors.reduce((sum, item) => sum + item.periodicPayment, 0),
         latestCycleNetResult: cycles.length > 0 ? cycles[0].netResult : null,

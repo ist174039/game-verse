@@ -41,6 +41,9 @@ export interface CompetitionRegistration {
   state: 'REGISTERED' | 'APPROVED' | 'REJECTED' | 'WITHDRAWN'
   registeredAt: ISODateTime
   approvedAt: ISODateTime | null
+  entryFeePaid: number
+  ledgerTransactionId: UUID | null
+  idempotencyKey: string | null
 }
 
 export interface CompetitionDivision {

@@ -2,6 +2,7 @@ import type { ISODateTime, UUID } from './core'
 
 export type LoanState = 'OFFERED' | 'ACTIVE' | 'REPAID' | 'DEFAULTED' | 'CANCELLED'
 export type SponsorshipState = 'OFFERED' | 'ACTIVE' | 'COMPLETED' | 'BREACHED' | 'CANCELLED'
+export type InfrastructureType = 'STADIUM' | 'ACADEMY' | 'TRAINING' | 'MARKETING' | 'FINANCE'
 
 export interface SponsorshipContract {
   id: UUID
@@ -29,6 +30,9 @@ export interface ClubLoan {
   state: LoanState
   originatedAt: ISODateTime
   nextPaymentAt: ISODateTime | null
+  totalInterest: number
+  outstandingInterest: number
+  totalRepaid: number
 }
 
 export interface FinancialCycle {
@@ -50,5 +54,26 @@ export interface GoldToSilverFinancingReceipt {
   clubId: UUID
   goldSpent: number
   silverCredited: number
+  transactionId: UUID
+}
+
+export interface InfrastructureUpgradeReceipt {
+  clubId: UUID
+  infrastructureType: InfrastructureType
+  fromLevel: number
+  toLevel: number
+  costSilver: number
+  maintenanceCost: number
+  transactionId: UUID
+}
+
+export interface LoanRepaymentReceipt {
+  loanId: UUID
+  amount: number
+  interestPaid: number
+  principalPaid: number
+  outstandingPrincipal: number
+  outstandingInterest: number
+  state: LoanState
   transactionId: UUID
 }
