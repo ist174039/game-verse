@@ -4,6 +4,12 @@
 
 O Admin usa Supabase Auth para autenticação e `public.admin_user` como fonte de verdade para autorização interna. O metadata `app_metadata.role` é mantido apenas como espelho de compatibilidade.
 
+Todo o acesso administrativo exige TOTP e uma sessão Supabase no nível `aal2`. Depois do primeiro login com password, o administrador é obrigado a digitalizar o QR code em `/admin-access` e confirmar o código da aplicação autenticadora. Nos acessos seguintes, a password cria apenas uma sessão `aal1`; a aplicação pede o código TOTP antes de disponibilizar páginas, APIs ou o cliente Supabase com a chave de serviço.
+
+Uma inscrição abandonada pode deixar fatores TOTP `unverified`. Como o cliente Supabase exige `aal2` para `unenroll`, `POST /api/admin/mfa/enrollment` usa a Auth Admin API apenas para listar os fatores do administrador autenticado e apagar fatores TOTP ainda não verificados. O endpoint nunca remove fatores verificados nem executa operações de negócio.
+
+Se a MFA estiver desativada na configuração de Auth do projeto, o Admin falha fechado e permanece inacessível. TOTP MFA deve estar ativo em **Supabase Dashboard → Authentication → Multi-Factor Authentication**.
+
 Depois de aplicar `00440_admin_identity_bootstrap.sql`, configurar temporariamente em Production:
 
 ```env
@@ -27,6 +33,8 @@ curl --fail --silent --show-error \
 ```
 
 O endpoint promove a conta existente ou cria a conta Auth em falta, cria/ativa `admin_user` como `super_admin`, regista `ADMIN_BOOTSTRAPPED` no audit log e fecha o bootstrap para outros utilizadores enquanto existir um administrador ativo. Depois do sucesso, remover `ADMIN_BOOTSTRAP_PASSWORD` e `ADMIN_BOOTSTRAP_SECRET` do ambiente de produção e fazer novo deployment. O acesso administrativo é feito em `/admin-access` ou diretamente em `/admin` quando já existe sessão válida.
+
+No primeiro acesso a `/admin-access`, concluir imediatamente a inscrição TOTP. Não partilhar o QR code nem a chave manual. Como o Supabase não fornece recovery codes TOTP, a perda do dispositivo exige uma recuperação privilegiada fora da aplicação: o owner do projeto remove o fator perdido através da Auth Admin MFA API e o administrador volta a inscrever TOTP no login seguinte. Nunca criar uma rota pública de bypass para este processo.
 
 Como alternativa operacional para uma conta Auth já existente, a mesma promoção pode ser executada no SQL editor com privilégios de projeto:
 

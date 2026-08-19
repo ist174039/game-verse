@@ -26,6 +26,6 @@ export default async function AdminLayout({children}:{children:React.ReactNode})
       <nav className="flex min-w-max gap-1">{items.map(({href,label,icon:Icon})=><Link key={href} href={href} className="inline-flex h-9 items-center gap-2 rounded-xl px-3 text-xs font-semibold text-muted-foreground transition hover:bg-white/[0.04] hover:text-foreground"><Icon className="h-3.5 w-3.5"/>{label}</Link>)}</nav>
     </div>
     {children}
-    <div className="mt-8 flex items-center gap-2 rounded-xl border border-primary/10 bg-primary/[.02] px-4 py-3 text-[10px] uppercase tracking-[.12em] text-muted-foreground"><ShieldAlert className="h-3.5 w-3.5 text-primary"/>Admin protegido por admin_user + role server-side · service key nunca é exposta ao cliente</div>
+    <div className="mt-8 flex items-center gap-2 rounded-xl border border-primary/10 bg-primary/[.02] px-4 py-3 text-[10px] uppercase tracking-[.12em] text-muted-foreground"><ShieldAlert className="h-3.5 w-3.5 text-primary"/>Admin protegido por admin_user + RBAC + TOTP AAL2 · service key nunca é exposta ao cliente</div>
   </div>
 }

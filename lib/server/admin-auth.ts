@@ -27,6 +27,13 @@ export interface AdminSession {
   serviceClient: ReturnType<typeof createAdminClient>
 }
 
+export interface AdminIdentity {
+  user: User
+  role: InternalRole
+  currentLevel: string | null
+  nextLevel: string | null
+}
+
 function legacyRole(user: User): InternalRole | null {
   const rawRole = typeof user.app_metadata?.role === 'string' ? user.app_metadata.role : null
   return rawRole && ADMIN_ROLES.has(rawRole as InternalRole) ? rawRole as InternalRole : null
@@ -36,31 +43,77 @@ function adminTableUnavailable(error: { code?: string | null; message?: string |
   return error.code === '42P01' || error.code === 'PGRST205' || Boolean(error.message?.includes('admin_user') && error.message?.includes('schema cache'))
 }
 
-export async function getAdminSession(): Promise<AdminSession | null> {
+async function resolveAdminIdentity() {
   const userClient = await createClient()
   const { data:{ user } } = await userClient.auth.getUser()
   if (!user || user.is_anonymous) return null
 
-  const serviceClient = createAdminClient()
-  const { data, error } = await serviceClient
+  // The admin_user self-read policy is deliberately sufficient here. The
+  // service key is not instantiated until the session has reached AAL2.
+  const { data, error } = await userClient
     .from('admin_user')
     .select('role,active')
     .eq('user_id', user.id)
     .maybeSingle()
 
   // Transitional fallback only while migration 00440 is not yet applied.
+  let role: InternalRole | null = null
   if (error) {
     if (adminTableUnavailable(error)) {
-      const role = legacyRole(user)
-      return role ? { user, role, userClient, serviceClient } : null
+      role = legacyRole(user)
+    } else {
+      console.error('admin_session_lookup_failed', { code: error.code, message: error.message })
+      return null
     }
-    console.error('admin_session_lookup_failed', { code: error.code, message: error.message })
+  } else {
+    role = typeof data?.role === 'string' ? data.role as InternalRole : null
+    if (!data?.active) role = null
+  }
+
+  if (!role || !ADMIN_ROLES.has(role)) return null
+
+  const { data: assurance, error: assuranceError } = await userClient.auth.mfa.getAuthenticatorAssuranceLevel()
+  if (assuranceError) {
+    console.error('admin_mfa_assurance_lookup_failed', { message: assuranceError.message })
     return null
   }
 
-  const role = typeof data?.role === 'string' ? data.role as InternalRole : null
-  if (!data?.active || !role || !ADMIN_ROLES.has(role)) return null
-  return { user, role, userClient, serviceClient }
+  return {
+    user,
+    role,
+    userClient,
+    currentLevel: assurance.currentLevel,
+    nextLevel: assurance.nextLevel,
+  }
+}
+
+export function hasVerifiedAdminMfa(identity: Pick<AdminIdentity, 'currentLevel' | 'nextLevel'>) {
+  // Requiring both values closes the stale-token case where a factor was
+  // removed but the current JWT still temporarily advertises AAL2.
+  return identity.currentLevel === 'aal2' && identity.nextLevel === 'aal2'
+}
+
+export async function getAdminIdentity(): Promise<AdminIdentity | null> {
+  const identity = await resolveAdminIdentity()
+  if (!identity) return null
+  return {
+    user: identity.user,
+    role: identity.role,
+    currentLevel: identity.currentLevel,
+    nextLevel: identity.nextLevel,
+  }
+}
+
+export async function getAdminSession(): Promise<AdminSession | null> {
+  const identity = await resolveAdminIdentity()
+  if (!identity || !hasVerifiedAdminMfa(identity)) return null
+
+  return {
+    user: identity.user,
+    role: identity.role,
+    userClient: identity.userClient,
+    serviceClient: createAdminClient(),
+  }
 }
 
 export function canAdmin(role: InternalRole, action: AdminAction) {
