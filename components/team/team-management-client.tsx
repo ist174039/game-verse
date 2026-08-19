@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowLeft, CircleDollarSign, LockKeyhole, ShieldAlert, Shirt, Users } from 'lucide-react'
+import { ArrowLeft, CircleDollarSign, ShieldAlert, Shirt, Swords, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PlayerCard } from '@/components/clan/player-card'
 import type { SquadReadModel } from '@/lib/application/read-models'
@@ -19,7 +19,7 @@ export function TeamManagementClient({ squad }: { squad: SquadReadModel }) {
       <section className="brand-watermark rounded-2xl border border-white/[0.07] bg-[#0b0b0b] px-5 py-6 sm:px-7">
         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div><p className="clan-kicker">Plantel · {squad.club.name}</p><h1 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">O plantel é património competitivo e económico.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">Overall e atributos vêm do provider externo. Posse, disponibilidade, contrato, valor e salário pertencem ao ativo dentro deste universo.</p></div>
-          <Button disabled title="A gestão de onze será ligada ao fluxo de pré-partida"><LockKeyhole className="mr-2 h-4 w-4" />Gerir onze</Button>
+          <Button asChild><Link href={`/play?universe=${squad.universe.id}`}><Swords className="mr-2 h-4 w-4" />Preparar próxima partida</Link></Button>
         </div>
       </section>
 

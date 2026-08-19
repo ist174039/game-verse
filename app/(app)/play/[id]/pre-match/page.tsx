@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation'
 import { ArrowLeft, CalendarClock, CheckCircle2, Clock, Shield, Swords, Trophy } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { createApplicationServices } from '@/lib/infrastructure/repositories/supabase/factory'
+import { MatchLineupSelector } from '@/components/play/match-lineup-selector'
 import { Button } from '@/components/ui/button'
 
 export const dynamic = 'force-dynamic'
@@ -18,15 +19,36 @@ export default async function PreMatchPage({ params }: { params: Promise<{ id:st
   if (!match) notFound()
   const ownClub = await services.clubs.getForUserInUniverse(user.id, match.universeId)
   if (!ownClub || ![match.homeClubId, match.awayClubId].includes(ownClub.id)) notFound()
-  const [homeClub, awayClub, competition, universe] = await Promise.all([
+
+  const [homeClub, awayClub, competition, universe, squad] = await Promise.all([
     services.clubs.getById(match.homeClubId),
     services.clubs.getById(match.awayClubId),
     match.competitionId ? services.competitions.getCompetition(match.competitionId) : Promise.resolve(null),
     services.universes.getById(match.universeId),
+    services.reads.squad.load(user.id, match.universeId),
   ])
-  if (!homeClub || !awayClub || !universe) notFound()
+  if (!homeClub || !awayClub || !universe || !squad) notFound()
 
-  const canSubmit = ['READY','PLAYED'].includes(match.state)
+  const lineupQ = await supabase.from('match_lineup').select('id,formation').eq('match_id', match.id).eq('club_id', ownClub.id).maybeSingle()
+  const lineup = lineupQ.error ? null : lineupQ.data
+  let initialPlayerIds:string[] = []
+  if (lineup?.id) {
+    const playersQ = await supabase.from('match_lineup_player').select('universe_player_id,slot').eq('lineup_id', lineup.id).order('slot')
+    if (!playersQ.error) initialPlayerIds = (playersQ.data ?? []).map(row => row.universe_player_id)
+  }
+
+  const readinessQ = await supabase.rpc('match_lineup_readiness', { p_match_id: match.id })
+  const readiness = readinessQ.error ? {} : (readinessQ.data ?? {}) as Record<string, unknown>
+  const homeReady = readiness.home_ready === true
+  const awayReady = readiness.away_ready === true
+  const bothReady = homeReady && awayReady
+  const ownIsHome = ownClub.id === homeClub.id
+
+  const eligiblePlayers = squad.players
+    .filter(entry => ['ACTIVE','RESERVE'].includes(entry.asset.status) && entry.activeContract)
+    .map(entry => ({ id: entry.asset.id, name: entry.player.name, position: entry.player.position, overall: entry.player.overall, status: entry.asset.status }))
+
+  const canSubmit = ['READY','PLAYED'].includes(match.state) && bothReady
   const hasResult = match.homeScore !== null && match.awayScore !== null
 
   return <div className="mx-auto max-w-5xl space-y-7">
@@ -34,11 +56,22 @@ export default async function PreMatchPage({ params }: { params: Promise<{ id:st
 
     <section className="brand-watermark rounded-2xl border border-white/[0.07] bg-[#0b0b0b] px-5 py-6 sm:px-7"><div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between"><div><p className="clan-kicker">Pré-jogo · {universe.name}</p><h1 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">{homeClub.name} <span className="text-white/20">vs</span> {awayClub.name}</h1><p className="mt-3 text-sm text-muted-foreground">{competition?.name ?? 'Partida sem competição associada'}</p></div><StateBadge state={match.state}/></div></section>
 
-    <section className="grid gap-px overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.07] sm:grid-cols-3"><Datum icon={Trophy} label="Competição" value={competition?.type ?? 'CASUAL'} detail={competition?.name ?? 'Sem competição'} /><Datum icon={CalendarClock} label="Agendamento" value={match.scheduledAt ? new Date(match.scheduledAt).toLocaleDateString('pt-PT') : 'Por definir'} detail={match.scheduledAt ? new Date(match.scheduledAt).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}) : 'Sem hora definida'} /><Datum icon={Swords} label="Resultado" value={hasResult ? `${match.homeScore} — ${match.awayScore}` : '—'} detail={match.state === 'SETTLED' ? 'Resultado liquidado' : 'Ainda não final'} /></section>
+    <section className="grid gap-px overflow-hidden rounded-2xl border border-white/[0.07] bg-white/[0.07] sm:grid-cols-3"><Datum icon={Trophy} label="Competição" value={competition?.type ?? 'CASUAL'} detail={competition?.name ?? 'Sem competição'} /><Datum icon={CalendarClock} label="Agendamento" value={match.scheduledAt ? new Date(match.scheduledAt).toLocaleDateString('pt-PT') : 'Por definir'} detail={match.scheduledAt ? new Date(match.scheduledAt).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}) : 'Sem hora definida'} /><Datum icon={Swords} label="Resultado" value={hasResult ? `${match.homeScore} — ${match.awayScore}` : '—'} detail={match.state === 'SETTLED' ? 'Resultado liquidado' : bothReady ? 'Onzes preparados' : 'Aguarda preparação'} /></section>
 
-    <section className="grid gap-5 md:grid-cols-2"><ClubCard club={homeClub} label="Casa" own={ownClub.id===homeClub.id}/><ClubCard club={awayClub} label="Fora" own={ownClub.id===awayClub.id}/></section>
+    <section className="grid gap-5 md:grid-cols-2"><ClubCard club={homeClub} label="Casa" own={ownIsHome}/><ClubCard club={awayClub} label="Fora" own={!ownIsHome}/></section>
 
-    <section className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-5 sm:p-6"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">Estado operacional</p><h2 className="mt-1 text-xl font-black">O que pode acontecer agora</h2></div>{match.state==='SETTLED'?<CheckCircle2 className="h-5 w-5 text-[var(--success)]"/>:<Clock className="h-5 w-5 text-primary"/>}</div><p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">O domínio ainda não possui uma entidade de lineup/convocatória. Por isso esta página não inventa onzes, formações, lesões ou H2H. Quando essa capability existir, entra aqui como read model próprio.</p><div className="mt-5 flex flex-wrap gap-3">{canSubmit&&<Button asChild><Link href={`/play/${match.id}/submit-result?universe=${match.universeId}`}><Swords className="mr-2 h-4 w-4"/>Submeter resultado</Link></Button>}<Button variant="outline" asChild><Link href={`/play?universe=${match.universeId}`}>Ver lifecycle</Link></Button></div></section>
+    <MatchLineupSelector
+      matchId={match.id}
+      matchState={match.state}
+      players={eligiblePlayers}
+      initialPlayerIds={initialPlayerIds}
+      initialFormation={typeof lineup?.formation === 'string' ? lineup.formation : '4-3-3'}
+      homeReady={homeReady}
+      awayReady={awayReady}
+      ownIsHome={ownIsHome}
+    />
+
+    <section className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-5 sm:p-6"><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.15em] text-muted-foreground">Estado operacional</p><h2 className="mt-1 text-xl font-black">Pronto para o lifecycle da partida</h2></div>{match.state==='SETTLED'?<CheckCircle2 className="h-5 w-5 text-[var(--success)]"/>:<Clock className="h-5 w-5 text-primary"/>}</div><p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">O resultado só pode entrar no domínio quando Casa e Fora tiverem um onze válido de 11 ativos com contrato. Se um jogador deixar de estar elegível antes da submissão, o lineup deixa automaticamente de ser válido e deve ser corrigido.</p><div className="mt-5 flex flex-wrap items-center gap-3">{canSubmit&&<Button asChild><Link href={`/play/${match.id}/submit-result?universe=${match.universeId}`}><Swords className="mr-2 h-4 w-4"/>Submeter resultado</Link></Button>}{['READY','PLAYED'].includes(match.state)&&!bothReady&&<Button disabled>Faltam onzes válidos</Button>}<Button variant="outline" asChild><Link href={`/play?universe=${match.universeId}`}>Ver lifecycle</Link></Button></div></section>
   </div>
 }
 
