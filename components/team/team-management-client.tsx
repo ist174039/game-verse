@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { ArrowLeft, CircleDollarSign, ShieldAlert, Shirt, Swords, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PlayerCard } from '@/components/clan/player-card'
+import { PlayerMarketAction } from '@/components/team/player-market-action'
 import type { SquadReadModel } from '@/lib/application/read-models'
 
 export function TeamManagementClient({ squad }: { squad: SquadReadModel }) {
@@ -32,7 +33,7 @@ export function TeamManagementClient({ squad }: { squad: SquadReadModel }) {
 
       <section className="clan-panel-neutral rounded-2xl p-4 sm:p-6">
         <div className="flex flex-col gap-4 border-b border-white/[0.06] pb-5 sm:flex-row sm:items-end sm:justify-between">
-          <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Jogadores do clube</p><h2 className="mt-1 text-xl font-black">Plantel real</h2></div>
+          <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Jogadores do clube</p><h2 className="mt-1 text-xl font-black">Plantel real</h2><p className="mt-1 max-w-xl text-xs leading-5 text-muted-foreground">As operações de mercado respeitam automaticamente o mínimo competitivo e bloqueiam jogadores que estejam num onze pendente.</p></div>
           <div className="flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground"><span>{occupancy}% ocupado</span><span>·</span><span>{squad.totals.listed} à venda</span><span>·</span><span>{squad.totals.auction} em leilão</span></div>
         </div>
 
@@ -40,14 +41,14 @@ export function TeamManagementClient({ squad }: { squad: SquadReadModel }) {
           <div className="flex min-h-[300px] flex-col items-center justify-center px-6 text-center"><Users className="h-10 w-10 text-primary/35" /><p className="mt-4 text-sm font-bold">Este clube ainda não tem jogadores.</p><p className="mt-2 max-w-md text-xs leading-5 text-muted-foreground">Quando os ativos UNIVERSE_PLAYER forem atribuídos ou adquiridos, aparecem aqui automaticamente. Não existe fallback com jogadores fictícios.</p></div>
         ) : (
           <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {squad.players.map(entry => <PlayerCard key={entry.asset.id} player={{ name: entry.player.name, position: entry.player.position, rating: entry.player.overall, imageUrl: entry.player.imageUrl, nationality: entry.player.nationality, marketValue: entry.asset.marketReferenceValue, salary: entry.activeContract?.salary ?? entry.asset.salaryReference, salaryIsReference: !entry.activeContract, status: entry.asset.status, sourceLabel: entry.player.provider }} />)}
+            {squad.players.map(entry => <div key={entry.asset.id} className="min-w-0"><PlayerCard player={{ name: entry.player.name, position: entry.player.position, rating: entry.player.overall, imageUrl: entry.player.imageUrl, nationality: entry.player.nationality, marketValue: entry.asset.marketReferenceValue, salary: entry.activeContract?.salary ?? entry.asset.salaryReference, salaryIsReference: !entry.activeContract, status: entry.asset.status, sourceLabel: entry.player.provider }} /><PlayerMarketAction universePlayerId={entry.asset.id} playerName={entry.player.name} status={entry.asset.status} marketReferenceValue={entry.asset.marketReferenceValue} /></div>)}
           </div>
         )}
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
         <RosterPolicy icon={Shirt} title="Fonte externa" text="Overall e atributos são dados canónicos do provider; a plataforma não inventa progressão de jogador." />
-        <RosterPolicy icon={ShieldAlert} title="Estado operacional" text="ACTIVE, RESERVE, LISTED, AUCTION e UNAVAILABLE controlam disponibilidade sem alterar o rating externo." />
+        <RosterPolicy icon={ShieldAlert} title="Proteção competitiva" text="Um jogador usado num onze pendente ou necessário para cumprir o mínimo da competição não pode ser retirado do plantel operacional." />
         <RosterPolicy icon={CircleDollarSign} title="Contrato ≠ referência" text="O salário contratual é obrigação real do clube. Salary reference é apenas referência económica para operações e propostas." />
       </section>
     </div>

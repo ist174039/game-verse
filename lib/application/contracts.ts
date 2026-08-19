@@ -14,7 +14,17 @@ export interface UniverseRepository { getById(id: UUID): Promise<Universe | null
 export interface ClubRepository { getById(id: UUID): Promise<Club | null>; getForUserInUniverse(userId: UUID, universeId: UUID): Promise<Club | null>; upgradeInfrastructure(input: { clubId: UUID; infrastructureType: InfrastructureType; idempotencyKey: string }): Promise<InfrastructureUpgradeReceipt> }
 export interface PlayerRepository { getMaster(id: UUID): Promise<PlayerMaster | null>; getUniversePlayer(id: UUID): Promise<UniversePlayer | null>; listClubSquad(clubId: UUID): Promise<UniversePlayer[]>; listProviderSnapshots(playerId: UUID): Promise<PlayerProviderSnapshot[]>; listValuations(universePlayerId: UUID): Promise<UniversePlayerValuation[]> }
 export interface CompetitionRepository { getSeason(id: UUID): Promise<Season | null>; getCompetition(id: UUID): Promise<Competition | null>; getMatch(id: UUID): Promise<Match | null>; listParticipants(competitionId: UUID): Promise<CompetitionParticipant[]>; listStandings(competitionId: UUID): Promise<LeagueStanding[]>; listClubMatches(clubId: UUID): Promise<Match[]>; register(input: { competitionId: UUID; idempotencyKey: string }): Promise<CompetitionRegistration>; submitResult(input: { matchId: UUID; homeScore: number; awayScore: number; idempotencyKey: string }): Promise<Match>; confirmResult(input: { matchId: UUID; idempotencyKey: string }): Promise<MatchSettlementReceipt>; openDispute(input: { matchId: UUID; reason: string }): Promise<MatchDispute> }
-export interface MarketRepository { getListing(id: UUID): Promise<MarketListing | null>; listActive(universeId: UUID): Promise<MarketListing[]>; listBids(listingId: UUID): Promise<AuctionBid[]>; createDirectListing(input: { universePlayerId: UUID; askingPrice: number; idempotencyKey: string }): Promise<MarketListing>; buyDirectListing(input: { listingId: UUID; idempotencyKey: string }): Promise<TransferReceipt>; placeAuctionBid(input: { listingId: UUID; amount: number; idempotencyKey: string }): Promise<AuctionBid>; settleAuction(input: { listingId: UUID; idempotencyKey: string }): Promise<TransferReceipt>; cancelListing(input: { listingId: UUID; idempotencyKey: string }): Promise<void> }
+export interface MarketRepository {
+  getListing(id: UUID): Promise<MarketListing | null>
+  listActive(universeId: UUID): Promise<MarketListing[]>
+  listBids(listingId: UUID): Promise<AuctionBid[]>
+  createDirectListing(input: { universePlayerId: UUID; askingPrice: number; idempotencyKey: string }): Promise<MarketListing>
+  createAuctionListing(input: { universePlayerId: UUID; startingPrice: number; buyNowPrice?: number | null; endsAt: string; idempotencyKey: string }): Promise<MarketListing>
+  buyDirectListing(input: { listingId: UUID; idempotencyKey: string }): Promise<TransferReceipt>
+  placeAuctionBid(input: { listingId: UUID; amount: number; idempotencyKey: string }): Promise<AuctionBid>
+  settleAuction(input: { listingId: UUID; idempotencyKey: string }): Promise<TransferReceipt>
+  cancelListing(input: { listingId: UUID; idempotencyKey: string }): Promise<void>
+}
 export interface LedgerRepository { getTransactionByIdempotencyKey(key: string): Promise<LedgerTransaction | null> }
 export interface ClubEconomyRepository {
   listSponsorships(clubId: UUID): Promise<SponsorshipContract[]>

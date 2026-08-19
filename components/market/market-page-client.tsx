@@ -60,12 +60,12 @@ export function MarketPageClient({ market }: { market: MarketReadModel }) {
         </aside>
 
         <div>
-          <div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-sm font-semibold">Venda direta</p><p className="text-xs text-muted-foreground">{listings.length} listagens</p></div><Button disabled>Colocar à venda</Button></div>
-          {listings.length === 0 ? <div className="clan-panel-neutral flex min-h-72 flex-col items-center justify-center rounded-2xl p-8 text-center"><Store className="h-9 w-9 text-primary/60" /><h2 className="mt-4 text-lg font-semibold">Nenhuma listagem encontrada</h2><p className="mt-2 text-sm text-muted-foreground">Ajusta a pesquisa ou aguarda novas vendas neste universo.</p></div> : <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">{listings.map(entry => <MarketListingCard key={entry.listing.id} entry={entry} ownClubId={market.buyerClub.id} buying={buyingId === entry.listing.id} onBuy={buy} />)}</div>}
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-3"><div><p className="text-sm font-semibold">Venda direta</p><p className="text-xs text-muted-foreground">{listings.length} listagens</p></div><Button variant="outline" asChild><Link href={`/team?universe=${market.universe.id}`}><Store className="h-4 w-4" />Vender jogador</Link></Button></div>
+          {listings.length === 0 ? <div className="clan-panel-neutral flex min-h-72 flex-col items-center justify-center rounded-2xl p-8 text-center"><Store className="h-9 w-9 text-primary/60" /><h2 className="mt-4 text-lg font-semibold">Nenhuma listagem encontrada</h2><p className="mt-2 text-sm text-muted-foreground">Ajusta a pesquisa ou coloca um jogador do teu plantel no mercado.</p></div> : <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">{listings.map(entry => <MarketListingCard key={entry.listing.id} entry={entry} ownClubId={market.buyerClub.id} buying={buyingId === entry.listing.id} onBuy={buy} />)}</div>}
         </div>
       </section>
 
-      <section className="flex flex-col gap-4 rounded-2xl border border-white/[0.06] bg-[#080808] p-5 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-semibold">{market.auctionListings.length} leilões ativos</p><p className="mt-1 text-xs text-muted-foreground">Bids usam escrow Silver real e settlement atómico.</p></div><Button variant="outline" asChild><Link href={`/market/auction?universe=${market.universe.id}`}>Abrir leilões <ArrowRight className="h-4 w-4" /></Link></Button></section>
+      <section className="flex flex-col gap-4 rounded-2xl border border-white/[0.06] bg-[#080808] p-5 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-semibold">{market.auctionListings.length} leilões ativos</p><p className="mt-1 text-xs text-muted-foreground">Bids usam escrow Silver real e reservam capacidade de plantel até ao settlement.</p></div><Button variant="outline" asChild><Link href={`/market/auction?universe=${market.universe.id}`}>Abrir leilões <ArrowRight className="h-4 w-4" /></Link></Button></section>
     </div>
   )
 }

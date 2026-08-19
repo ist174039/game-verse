@@ -115,6 +115,18 @@ export class SupabaseMarketRepository implements MarketRepository {
     return mapListing(data)
   }
 
+  async createAuctionListing(input: { universePlayerId: UUID; startingPrice: number; buyNowPrice?: number | null; endsAt: string; idempotencyKey: string }): Promise<MarketListing> {
+    const { data, error } = await this.client.rpc('create_auction_listing', {
+      p_universe_player_id: input.universePlayerId,
+      p_starting_price: input.startingPrice,
+      p_buy_now_price: input.buyNowPrice ?? null,
+      p_ends_at: input.endsAt,
+      p_idempotency_key: input.idempotencyKey,
+    })
+    if (error) throw error
+    return mapListing(data)
+  }
+
   async buyDirectListing(input: { listingId: UUID; idempotencyKey: string }): Promise<TransferReceipt> {
     const { data, error } = await this.client.rpc('buy_direct_market_listing', { p_listing_id: input.listingId, p_idempotency_key: input.idempotencyKey })
     if (error) throw error
