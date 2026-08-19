@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
 
-export default function AdminLoginPage() {
-  redirect('/auth/login')
+export default function AdminLoginPage(){
+  redirect('/admin-access')
 }

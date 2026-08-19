@@ -14,15 +14,20 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user) redirect('/auth/login')
 
   const isGuest = user.is_anonymous || false
-  const [profileResult,goldResult] = !isGuest
+  const [profileResult,goldResult,adminResult] = !isGuest
     ? await Promise.all([
         supabase.from('user_profile').select('username').eq('id', user.id).maybeSingle(),
         supabase.from('user_currency_account').select('balance').eq('user_id',user.id).eq('currency','GOLD').maybeSingle(),
+        supabase.from('admin_user').select('role,active').eq('user_id',user.id).maybeSingle(),
       ])
-    : [{data:null},{data:null}]
+    : [{data:null,error:null},{data:null,error:null},{data:null,error:null}]
   const username = profileResult.data?.username || user.email?.split('@')[0] || 'Manager'
   const goldBalance = Number(goldResult.data?.balance ?? 0)
-  const role = typeof user.app_metadata?.role === 'string' ? user.app_metadata.role : null
+
+  const dbRole = adminResult.data?.active && typeof adminResult.data.role === 'string' ? adminResult.data.role : null
+  const legacyRole = typeof user.app_metadata?.role === 'string' ? user.app_metadata.role : null
+  const adminTableUnavailable = Boolean(adminResult.error && (adminResult.error.code === '42P01' || adminResult.error.code === 'PGRST205'))
+  const role = dbRole ?? (adminTableUnavailable ? legacyRole : null)
   const hasInternalAccess = Boolean(role && INTERNAL_ROLES.has(role))
 
   return (

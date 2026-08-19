@@ -1,5 +1,39 @@
 # Operação de Produção — Clã das Sombras
 
+## Bootstrap do primeiro administrador
+
+O Admin usa Supabase Auth para autenticação e `public.admin_user` como fonte de verdade para autorização interna. O metadata `app_metadata.role` é mantido apenas como espelho de compatibilidade.
+
+Depois de aplicar `00440_admin_identity_bootstrap.sql`, configurar temporariamente em Production:
+
+```env
+ADMIN_BOOTSTRAP_EMAIL=<email-do-admin>
+ADMIN_BOOTSTRAP_SECRET=<segredo-aleatorio-com-pelo-menos-16-caracteres>
+```
+
+Se o email ainda não existir em Supabase Auth, configurar também uma password inicial forte com pelo menos 12 caracteres:
+
+```env
+ADMIN_BOOTSTRAP_PASSWORD=<password-inicial-forte>
+```
+
+Após um novo deployment com essas variáveis, executar uma única vez:
+
+```bash
+curl --fail --silent --show-error \
+  -X POST \
+  -H "Authorization: Bearer $ADMIN_BOOTSTRAP_SECRET" \
+  "$NEXT_PUBLIC_APP_URL/api/internal/admin/bootstrap"
+```
+
+O endpoint promove a conta existente ou cria a conta Auth em falta, cria/ativa `admin_user` como `super_admin`, regista `ADMIN_BOOTSTRAPPED` no audit log e fecha o bootstrap para outros utilizadores enquanto existir um administrador ativo. Depois do sucesso, remover `ADMIN_BOOTSTRAP_PASSWORD` e `ADMIN_BOOTSTRAP_SECRET` do ambiente de produção e fazer novo deployment. O acesso administrativo é feito em `/admin-access` ou diretamente em `/admin` quando já existe sessão válida.
+
+Como alternativa operacional para uma conta Auth já existente, a mesma promoção pode ser executada no SQL editor com privilégios de projeto:
+
+```sql
+select public.service_bootstrap_admin_by_email('admin@exemplo.pt','Initial platform administrator bootstrap');
+```
+
 ## Maintenance worker
 
 A rota `GET|POST /api/internal/maintenance` executa o maintenance worker idempotente da plataforma. Ela processa:

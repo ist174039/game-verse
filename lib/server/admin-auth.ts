@@ -26,13 +26,41 @@ export interface AdminSession {
   serviceClient: ReturnType<typeof createAdminClient>
 }
 
+function legacyRole(user: User): InternalRole | null {
+  const rawRole = typeof user.app_metadata?.role === 'string' ? user.app_metadata.role : null
+  return rawRole && ADMIN_ROLES.has(rawRole as InternalRole) ? rawRole as InternalRole : null
+}
+
+function adminTableUnavailable(error: { code?: string | null; message?: string | null }) {
+  return error.code === '42P01' || error.code === 'PGRST205' || Boolean(error.message?.includes('admin_user')) && Boolean(error.message?.includes('schema cache'))
+}
+
 export async function getAdminSession(): Promise<AdminSession | null> {
   const userClient = await createClient()
   const { data:{ user } } = await userClient.auth.getUser()
   if (!user || user.is_anonymous) return null
-  const rawRole = typeof user.app_metadata?.role === 'string' ? user.app_metadata.role : null
-  if (!rawRole || !ADMIN_ROLES.has(rawRole as InternalRole)) return null
-  return { user, role: rawRole as InternalRole, userClient, serviceClient: createAdminClient() }
+
+  const serviceClient = createAdminClient()
+  const { data, error } = await serviceClient
+    .from('admin_user')
+    .select('role,active')
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  // Transitional fallback only while migration 00440 is not yet applied.
+  // Once the table exists, absence/inactive state fails closed even if old metadata remains.
+  if (error) {
+    if (adminTableUnavailable(error)) {
+      const role = legacyRole(user)
+      return role ? { user, role, userClient, serviceClient } : null
+    }
+    console.error('admin_session_lookup_failed', { code: error.code, message: error.message })
+    return null
+  }
+
+  const role = typeof data?.role === 'string' ? data.role as InternalRole : null
+  if (!data?.active || !role || !ADMIN_ROLES.has(role)) return null
+  return { user, role, userClient, serviceClient }
 }
 
 export function canAdmin(role: InternalRole, action: AdminAction) {
