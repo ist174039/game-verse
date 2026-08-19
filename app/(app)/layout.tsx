@@ -14,15 +14,29 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user) redirect('/auth/login')
 
   const isGuest = user.is_anonymous || false
-  const [profileResult,goldResult,adminResult] = !isGuest
+  const [profileResult,currenciesResult,clubsResult,silverResult,universesResult,adminResult] = !isGuest
     ? await Promise.all([
         supabase.from('user_profile').select('username').eq('id', user.id).maybeSingle(),
-        supabase.from('user_currency_account').select('balance').eq('user_id',user.id).eq('currency','GOLD').maybeSingle(),
+        supabase.from('user_currency_account').select('currency,balance').eq('user_id',user.id),
+        supabase.from('club').select('id,name,universe_id').eq('user_id',user.id),
+        supabase.from('club_currency_account').select('club_id,currency,balance').eq('currency','SILVER'),
+        supabase.from('universe').select('id,name,kind').not('state','in','(CANCELLED,ARCHIVED)'),
         supabase.from('admin_user').select('role,active').eq('user_id',user.id).maybeSingle(),
       ])
-    : [{data:null,error:null},{data:null,error:null},{data:null,error:null}]
+    : [{data:null,error:null},{data:[],error:null},{data:[],error:null},{data:[],error:null},{data:[],error:null},{data:null,error:null}]
   const username = profileResult.data?.username || user.email?.split('@')[0] || 'Manager'
-  const goldBalance = Number(goldResult.data?.balance ?? 0)
+  const currencies = (currenciesResult.data ?? []) as Array<{currency:string;balance:number|string}>
+  const goldBalance = Number(currencies.find(account=>account.currency==='GOLD')?.balance ?? 0)
+  const bronzeBalance = Number(currencies.find(account=>account.currency==='BRONZE')?.balance ?? 0)
+  const universes = new Map(((universesResult.data ?? []) as Array<{id:string;name:string;kind:string}>).map(universe=>[universe.id,universe]))
+  const silverByClub = new Map(((silverResult.data ?? []) as Array<{club_id:string;balance:number|string}>).map(account=>[account.club_id,Number(account.balance)]))
+  const universeContexts = ((clubsResult.data ?? []) as Array<{id:string;name:string;universe_id:string}>)
+    .map(club=>{
+      const universe=universes.get(club.universe_id)
+      return universe?{id:universe.id,name:universe.name,kind:universe.kind,clubName:club.name,silverBalance:silverByClub.get(club.id)??0}:null
+    })
+    .filter((context):context is NonNullable<typeof context>=>context!==null)
+    .sort((a,b)=>Number(b.kind==='MAIN')-Number(a.kind==='MAIN')||a.name.localeCompare(b.name,'pt'))
 
   const dbRole = adminResult.data?.active && typeof adminResult.data.role === 'string' ? adminResult.data.role : null
   const legacyRole = typeof user.app_metadata?.role === 'string' ? user.app_metadata.role : null
@@ -32,7 +46,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <div className="min-h-screen bg-background">
-      <AppSidebar username={username} goldBalance={goldBalance} isGuest={isGuest} hasInternalAccess={hasInternalAccess} />
+      <AppSidebar username={username} currencyBalances={{gold:goldBalance,bronze:bronzeBalance}} universeContexts={universeContexts} isGuest={isGuest} adminRole={hasInternalAccess ? role : null} />
       <main className="pb-[calc(4.6rem+env(safe-area-inset-bottom))] pt-16 lg:pb-0 lg:pl-[17rem] lg:pt-0">
         <div className="brand-watermark mx-auto min-h-screen w-full max-w-[1680px] px-4 py-5 sm:px-5 lg:px-8 lg:py-7 xl:px-10">{children}</div>
       </main>

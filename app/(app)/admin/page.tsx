@@ -1,9 +1,10 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { Activity, Banknote, CircleDollarSign, Flag, Globe2, Landmark, ListChecks, LockKeyhole, ReceiptText, Settings, ShieldAlert, Swords, Tickets, Trophy, Users, WalletCards } from 'lucide-react'
+import { Activity, AppWindow, Banknote, CircleDollarSign, Flag, Globe2, Landmark, ListChecks, LockKeyhole, ReceiptText, Settings, ShieldAlert, Swords, Tickets, Trophy, Users, WalletCards } from 'lucide-react'
 import { createAdminApplicationServices } from '@/lib/infrastructure/repositories/supabase/factory'
 import { getAdminSession } from '@/lib/server/admin-auth'
 import { Button } from '@/components/ui/button'
+import { PlatformLink } from '@/components/admin/platform-link'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,7 +21,7 @@ export default async function AdminPanelPage() {
     <section className="brand-watermark rounded-2xl border border-white/[0.07] bg-[#0b0b0b] px-5 py-6 sm:px-7">
       <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
         <div><div className="flex items-center gap-2"><ShieldAlert className="h-4 w-4 text-primary"/><p className="clan-kicker">Platform Control Center</p></div><h1 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">Gestão global do Clã das Sombras.</h1><p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">Operação, governance, economia, competição, suporte e auditoria numa única superfície. Os indicadores abaixo vêm do domínio real; nenhuma métrica é fabricada no frontend.</p></div>
-        <div className="flex flex-col gap-2 sm:flex-row xl:flex-col xl:items-end"><div className="rounded-xl border border-white/[0.07] bg-white/[0.02] px-4 py-3"><p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Role ativa</p><p className="mt-1 text-sm font-black uppercase text-primary">{role.replaceAll('_',' ')}</p></div><Button asChild variant="outline"><Link href="/admin/backoffice"><Tickets className="mr-2 h-4 w-4"/>Abrir backoffice</Link></Button></div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap xl:max-w-xs xl:justify-end"><div className="w-full rounded-xl border border-white/[0.07] bg-white/[0.02] px-4 py-3"><p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Role ativa</p><p className="mt-1 text-sm font-black uppercase text-primary">{role.replaceAll('_',' ')}</p></div><Button asChild><PlatformLink><AppWindow className="mr-2 h-4 w-4"/>Abrir plataforma</PlatformLink></Button><Button asChild variant="outline"><Link href="/admin/backoffice"><Tickets className="mr-2 h-4 w-4"/>Abrir backoffice</Link></Button></div>
       </div>
     </section>
 
