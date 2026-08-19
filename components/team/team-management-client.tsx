@@ -3,12 +3,20 @@ import { ArrowLeft, CircleDollarSign, ShieldAlert, Shirt, Swords, Users } from '
 import { Button } from '@/components/ui/button'
 import { PlayerCard } from '@/components/clan/player-card'
 import { PlayerMarketAction } from '@/components/team/player-market-action'
+import { PlayerSquadStatusAction } from '@/components/team/player-squad-status-action'
 import type { SquadReadModel } from '@/lib/application/read-models'
 
+type SquadPlayer = SquadReadModel['players'][number]
+
 export function TeamManagementClient({ squad }: { squad: SquadReadModel }) {
-  const minimumGap = Math.max(0, squad.universe.minSquadSize - squad.totals.squadSize)
+  const eligibleCount = squad.players.filter(entry => ['ACTIVE','RESERVE'].includes(entry.asset.status) && entry.activeContract).length
+  const minimumGap = Math.max(0, squad.universe.minSquadSize - eligibleCount)
   const capacity = Math.max(1, squad.universe.maxSquadSize)
   const occupancy = Math.min(100, Math.round((squad.totals.squadSize / capacity) * 100))
+  const firstTeam = squad.players.filter(entry => entry.asset.status === 'ACTIVE')
+  const reserves = squad.players.filter(entry => entry.asset.status === 'RESERVE')
+  const otherPlayers = squad.players.filter(entry => !['ACTIVE','RESERVE'].includes(entry.asset.status))
+  const operationalWithoutContract = [...firstTeam, ...reserves].filter(entry => !entry.activeContract).length
 
   return (
     <div className="space-y-7">
@@ -19,40 +27,58 @@ export function TeamManagementClient({ squad }: { squad: SquadReadModel }) {
 
       <section className="brand-watermark rounded-2xl border border-white/[0.07] bg-[#0b0b0b] px-5 py-6 sm:px-7">
         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div><p className="clan-kicker">Plantel · {squad.club.name}</p><h1 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">O plantel é património competitivo e económico.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">Overall e atributos vêm do provider externo. Posse, disponibilidade, contrato, valor e salário pertencem ao ativo dentro deste universo.</p></div>
+          <div><p className="clan-kicker">Plantel · {squad.club.name}</p><h1 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">Define a primeira equipa. Protege a profundidade.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">ACTIVE representa a primeira equipa e RESERVE a reserva operacional. Ambos podem entrar num onze quando existe contrato ativo; ratings e atributos continuam exclusivamente sob controlo do provider.</p></div>
           <Button asChild><Link href={`/play?universe=${squad.universe.id}`}><Swords className="mr-2 h-4 w-4" />Preparar próxima partida</Link></Button>
         </div>
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <RosterRule label="Plantel" value={`${squad.totals.squadSize}/${squad.universe.maxSquadSize}`} detail={minimumGap > 0 ? `Faltam ${minimumGap} para o mínimo de ${squad.universe.minSquadSize}.` : `Mínimo de ${squad.universe.minSquadSize} cumprido.`} accent={minimumGap === 0} />
-        <RosterRule label="Ativos / Reserva" value={`${squad.totals.active} / ${squad.totals.reserve}`} detail={`${squad.totals.unavailable} indisponíveis neste momento.`} />
-        <RosterRule label="Valor ref. plantel" value={formatSilver(squad.totals.marketReferenceValue)} detail="Soma do valor de referência dos ativos." />
-        <RosterRule label="Folha salarial" value={formatSilver(squad.totals.contractPayroll || squad.totals.salaryReference)} detail={squad.totals.contractPayroll > 0 ? 'Contratos ativos.' : 'Referência salarial enquanto não existem contratos ativos.'} />
+        <RosterRule label="Elegíveis" value={`${eligibleCount}/${squad.universe.minSquadSize}`} detail={minimumGap > 0 ? `Faltam ${minimumGap} jogadores operacionais com contrato ativo.` : 'Plantel mínimo competitivo cumprido.'} accent={minimumGap === 0} />
+        <RosterRule label="1ª equipa / Reserva" value={`${firstTeam.length} / ${reserves.length}`} detail={operationalWithoutContract > 0 ? `${operationalWithoutContract} estados operacionais sem contrato ativo.` : 'Todos os estados operacionais têm contrato.'} />
+        <RosterRule label="Ocupação" value={`${squad.totals.squadSize}/${squad.universe.maxSquadSize}`} detail={`${occupancy}% da capacidade do universo · ${squad.totals.listed + squad.totals.auction} no mercado.`} />
+        <RosterRule label="Folha salarial" value={formatSilver(squad.totals.contractPayroll || squad.totals.salaryReference)} detail={squad.totals.contractPayroll > 0 ? 'Contratos ativos do plantel.' : 'Referência salarial enquanto não existem contratos ativos.'} />
       </section>
+
+      {minimumGap > 0 && <section className="rounded-2xl border border-amber-500/15 bg-amber-500/[0.04] p-4 text-sm text-amber-100/90"><strong>Plantel competitivo incompleto.</strong> Jogadores LISTED, AUCTION, UNAVAILABLE ou sem contrato ativo não contam para o mínimo. Corrige o estado/contrato ou reforça o plantel antes de novas inscrições.</section>}
 
       <section className="clan-panel-neutral rounded-2xl p-4 sm:p-6">
         <div className="flex flex-col gap-4 border-b border-white/[0.06] pb-5 sm:flex-row sm:items-end sm:justify-between">
-          <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Jogadores do clube</p><h2 className="mt-1 text-xl font-black">Plantel real</h2><p className="mt-1 max-w-xl text-xs leading-5 text-muted-foreground">As operações de mercado respeitam automaticamente o mínimo competitivo e bloqueiam jogadores que estejam num onze pendente.</p></div>
-          <div className="flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground"><span>{occupancy}% ocupado</span><span>·</span><span>{squad.totals.listed} à venda</span><span>·</span><span>{squad.totals.auction} em leilão</span></div>
+          <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">Gestão operacional</p><h2 className="mt-1 text-xl font-black">Plantel real</h2><p className="mt-1 max-w-2xl text-xs leading-5 text-muted-foreground">Muda jogadores entre primeira equipa e reserva diretamente aqui. Estados de mercado e indisponibilidade são controlados pelas respetivas operações e não podem ser contornados por este seletor.</p></div>
+          <div className="flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground"><span>{squad.totals.listed} à venda</span><span>·</span><span>{squad.totals.auction} em leilão</span><span>·</span><span>{squad.totals.unavailable} indisponíveis</span></div>
         </div>
 
         {squad.players.length === 0 ? (
           <div className="flex min-h-[300px] flex-col items-center justify-center px-6 text-center"><Users className="h-10 w-10 text-primary/35" /><p className="mt-4 text-sm font-bold">Este clube ainda não tem jogadores.</p><p className="mt-2 max-w-md text-xs leading-5 text-muted-foreground">Quando os ativos UNIVERSE_PLAYER forem atribuídos ou adquiridos, aparecem aqui automaticamente. Não existe fallback com jogadores fictícios.</p></div>
-        ) : (
-          <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {squad.players.map(entry => <div key={entry.asset.id} className="min-w-0"><PlayerCard player={{ name: entry.player.name, position: entry.player.position, rating: entry.player.overall, imageUrl: entry.player.imageUrl, nationality: entry.player.nationality, marketValue: entry.asset.marketReferenceValue, salary: entry.activeContract?.salary ?? entry.asset.salaryReference, salaryIsReference: !entry.activeContract, status: entry.asset.status, sourceLabel: entry.player.provider }} /><PlayerMarketAction universePlayerId={entry.asset.id} playerName={entry.player.name} status={entry.asset.status} marketReferenceValue={entry.asset.marketReferenceValue} /></div>)}
-          </div>
-        )}
+        ) : <div className="mt-6 space-y-8">
+          <SquadGroup title="Primeira equipa" detail="Jogadores marcados ACTIVE." players={firstTeam} />
+          <SquadGroup title="Reserva operacional" detail="Jogadores RESERVE; continuam elegíveis para o onze com contrato ativo." players={reserves} />
+          <SquadGroup title="Outros estados" detail="Sem função operacional, no mercado ou indisponíveis. OWNED com contrato pode ser atribuído à primeira equipa ou reserva." players={otherPlayers} />
+        </div>}
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
-        <RosterPolicy icon={Shirt} title="Fonte externa" text="Overall e atributos são dados canónicos do provider; a plataforma não inventa progressão de jogador." />
-        <RosterPolicy icon={ShieldAlert} title="Proteção competitiva" text="Um jogador usado num onze pendente ou necessário para cumprir o mínimo da competição não pode ser retirado do plantel operacional." />
-        <RosterPolicy icon={CircleDollarSign} title="Contrato ≠ referência" text="O salário contratual é obrigação real do clube. Salary reference é apenas referência económica para operações e propostas." />
+        <RosterPolicy icon={Shirt} title="Fonte externa" text="Overall e atributos são dados canónicos do provider; ACTIVE/RESERVE nunca altera o rating do jogador." />
+        <RosterPolicy icon={ShieldAlert} title="Elegibilidade real" text="O mínimo competitivo usa apenas ACTIVE ou RESERVE com contrato ativo, não o número bruto de ativos possuídos." />
+        <RosterPolicy icon={CircleDollarSign} title="Mercado protegido" text="Listagens, leilões e transferências continuam sujeitos às proteções de plantel, capacidade e onzes pendentes." />
       </section>
     </div>
   )
+}
+
+function SquadGroup({ title, detail, players }: { title: string; detail: string; players: SquadPlayer[] }) {
+  if (players.length === 0) return null
+  return <section>
+    <div className="mb-4 flex flex-wrap items-end justify-between gap-2"><div><h3 className="text-sm font-black">{title}</h3><p className="mt-1 text-xs text-muted-foreground">{detail}</p></div><span className="text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{players.length} jogadores</span></div>
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">{players.map(entry => <PlayerTile key={entry.asset.id} entry={entry} />)}</div>
+  </section>
+}
+
+function PlayerTile({ entry }: { entry: SquadPlayer }) {
+  return <div className="min-w-0">
+    <PlayerCard player={{ name: entry.player.name, position: entry.player.position, rating: entry.player.overall, imageUrl: entry.player.imageUrl, nationality: entry.player.nationality, marketValue: entry.asset.marketReferenceValue, salary: entry.activeContract?.salary ?? entry.asset.salaryReference, salaryIsReference: !entry.activeContract, status: entry.asset.status, sourceLabel: entry.player.provider }} />
+    <PlayerSquadStatusAction universePlayerId={entry.asset.id} status={entry.asset.status} hasActiveContract={Boolean(entry.activeContract)} />
+    <PlayerMarketAction universePlayerId={entry.asset.id} playerName={entry.player.name} status={entry.asset.status} marketReferenceValue={entry.asset.marketReferenceValue} />
+  </div>
 }
 
 function formatSilver(value: number) { return `${value.toLocaleString('pt-PT')} S` }
