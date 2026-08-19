@@ -58,6 +58,19 @@ export interface EconomyReadModel { universe: Universe; club: Club; balances: { 
 export interface GoldCatalogReadModel { balance: number; packages: GoldPackage[]; recentOrders: PaymentOrder[] }
 export interface OnboardingReadModel { userId: UUID; profileReady: boolean; availableUniverses: Universe[]; existingClubUniverseIds: UUID[]; nextStep: 'IDENTITY' | 'UNIVERSE' | 'CLUB' | 'COMPLETE' }
 
+export interface CalendarMatchReadModel {
+  match: Match
+  homeClubName: string
+  awayClubName: string
+  competitionName: string | null
+  competitionType: string | null
+  roundName: string | null
+  roundNumber: number | null
+}
+export type CalendarSeasonEventKind = 'REGISTRATION_START' | 'REGISTRATION_END' | 'SEASON_START' | 'SEASON_END'
+export interface CalendarSeasonEventReadModel { id: string; seasonId: UUID; seasonName: string; kind: CalendarSeasonEventKind; title: string; at: string }
+export interface CalendarReadModel { universe: Universe; club: Club; matches: CalendarMatchReadModel[]; seasonEvents: CalendarSeasonEventReadModel[] }
+
 export interface AdminRecentUserReadModel { id: UUID; username: string; managerLevel: number; reputation: number; createdAt: string }
 export interface AdminUniverseReadModel { id: UUID; name: string; kind: string; state: string; accessPolicy: string; economicProfile: string; financingPolicy: string; createdAt: string }
 export interface AdminPaymentOrderReadModel { id: UUID; userId: UUID; status: string; amountCents: number; currency: string; goldAmount: number; refundedCents: number; createdAt: string }
