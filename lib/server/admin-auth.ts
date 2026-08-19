@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { InternalRole } from '@/lib/domain/governance'
 
-export type AdminAction = 'TICKET' | 'MODERATION' | 'FREEZE' | 'CONFIG' | 'REFUND' | 'REVERSAL' | 'COMPETITION' | 'PLAYERS'
+export type AdminAction = 'TICKET' | 'MODERATION' | 'FREEZE' | 'CONFIG' | 'REFUND' | 'REVERSAL' | 'COMPETITION' | 'PLAYERS' | 'ADMIN_USERS'
 
 export const ADMIN_ROLES = new Set<InternalRole>(['super_admin','platform_admin','economy_admin','competition_admin','moderator','support_agent','finance_operator','read_only_analyst'])
 
@@ -17,6 +17,7 @@ const permissions: Record<AdminAction, Set<InternalRole>> = {
   REVERSAL: new Set(['super_admin','platform_admin','economy_admin','competition_admin','finance_operator']),
   COMPETITION: new Set(['super_admin','platform_admin','competition_admin']),
   PLAYERS: new Set(['super_admin','platform_admin']),
+  ADMIN_USERS: new Set(['super_admin','platform_admin']),
 }
 
 export interface AdminSession {
@@ -32,7 +33,7 @@ function legacyRole(user: User): InternalRole | null {
 }
 
 function adminTableUnavailable(error: { code?: string | null; message?: string | null }) {
-  return error.code === '42P01' || error.code === 'PGRST205' || Boolean(error.message?.includes('admin_user')) && Boolean(error.message?.includes('schema cache'))
+  return error.code === '42P01' || error.code === 'PGRST205' || Boolean(error.message?.includes('admin_user') && error.message?.includes('schema cache'))
 }
 
 export async function getAdminSession(): Promise<AdminSession | null> {
@@ -48,7 +49,6 @@ export async function getAdminSession(): Promise<AdminSession | null> {
     .maybeSingle()
 
   // Transitional fallback only while migration 00440 is not yet applied.
-  // Once the table exists, absence/inactive state fails closed even if old metadata remains.
   if (error) {
     if (adminTableUnavailable(error)) {
       const role = legacyRole(user)

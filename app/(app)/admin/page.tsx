@@ -1,23 +1,17 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { Activity, Banknote, CircleDollarSign, Flag, Globe2, Landmark, ListChecks, LockKeyhole, ReceiptText, Settings, ShieldAlert, Swords, Tickets, Trophy, Users, WalletCards } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
 import { createAdminApplicationServices } from '@/lib/infrastructure/repositories/supabase/factory'
+import { getAdminSession } from '@/lib/server/admin-auth'
 import { Button } from '@/components/ui/button'
-
-const ADMIN_ROLES = new Set(['super_admin','platform_admin','economy_admin','competition_admin','moderator','support_agent','finance_operator','read_only_analyst'])
 
 export const dynamic = 'force-dynamic'
 
 export default async function AdminPanelPage() {
-  const userClient = await createClient()
-  const { data:{ user } } = await userClient.auth.getUser()
-  if (!user || user.is_anonymous) redirect('/auth/login')
-  const role = typeof user.app_metadata?.role === 'string' ? user.app_metadata.role : null
-  if (!role || !ADMIN_ROLES.has(role)) redirect('/dashboard')
+  const session = await getAdminSession()
+  if (!session) redirect('/admin-access')
+  const { userClient, serviceClient, role } = session
 
-  const serviceClient = createAdminClient()
   const services = createAdminApplicationServices(userClient, serviceClient)
   const overview = await services.adminReads.overview.load()
   const m = overview.metrics
@@ -45,14 +39,14 @@ export default async function AdminPanelPage() {
     </section>
 
     <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-      <Module icon={Users} title="Utilizadores & Clubes" detail="Identidade global, clubes por universo, reputação e contexto de suporte." href="#users" />
-      <Module icon={Globe2} title="Universos" detail="Estado, admission policy, perfis económicos e governance." href="#universes" />
-      <Module icon={Swords} title="Competição" detail="Partidas pendentes, seasons, ligas, taças e settlements." href="#competition" />
-      <Module icon={Landmark} title="Economia" detail="Ledger, mercado, dívida, freezes, Gold/Silver/Bronze e liabilities." href="#economy" />
-      <Module icon={CircleDollarSign} title="Stripe & Refunds" detail="Ordens de pagamento, refunds e reconciliação Gold." href="#payments" />
+      <Module icon={Users} title="Utilizadores & Clubes" detail="Identidade global, clubes por universo, reputação e contexto de suporte." href="/admin/users" />
+      <Module icon={Globe2} title="Universos" detail="Estado, admission policy, perfis económicos e governance." href="/admin/universes" />
+      <Module icon={Swords} title="Competição" detail="Partidas pendentes, seasons, ligas, taças e settlements." href="/admin/competition" />
+      <Module icon={Landmark} title="Economia" detail="Ledger, mercado, dívida, freezes, Gold/Silver/Bronze e liabilities." href="/admin/economy" />
+      <Module icon={CircleDollarSign} title="Stripe & Refunds" detail="Ordens de pagamento, refunds e reconciliação Gold." href="/admin/payments" />
       <Module icon={ShieldAlert} title="Moderação" detail="Casos, reports, disputes, fraude e freezes económicos." href="#moderation" />
-      <Module icon={Settings} title="Configuração" detail="Platform config versionada e feature flags por scope." href="#configuration" />
-      <Module icon={ReceiptText} title="Audit Log" detail="Histórico administrativo imutável de ações sensíveis." href="#audit" />
+      <Module icon={Settings} title="Configuração" detail="Platform config versionada e feature flags por scope." href="/admin/config" />
+      <Module icon={ReceiptText} title="Audit Log" detail="Histórico administrativo imutável de ações sensíveis." href="/admin/audit" />
     </section>
 
     <section id="users" className="grid scroll-mt-24 gap-5 xl:grid-cols-[1fr_.9fr]">
