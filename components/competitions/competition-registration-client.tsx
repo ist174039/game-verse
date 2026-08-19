@@ -43,10 +43,19 @@ export function CompetitionRegistrationClient({ competitionId, entryFee, silverB
   }
 
   if (registrationState) {
+    const approved = registrationState === 'APPROVED'
+    const registered = registrationState === 'REGISTERED'
+    const positive = approved || registered
     return (
-      <section className="rounded-2xl border border-primary/15 bg-primary/[0.025] p-5">
-        <p className="text-sm font-bold">Clube inscrito</p>
-        <p className="mt-1 text-xs text-muted-foreground">Estado da inscrição: {registrationState}</p>
+      <section className={`rounded-2xl border p-5 ${positive ? 'border-primary/15 bg-primary/[0.025]' : 'border-white/[0.07] bg-[#0b0b0b]'}`}>
+        <p className="text-sm font-bold">{positive ? 'Clube inscrito' : `Inscrição ${registrationState}`}</p>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+          {approved
+            ? 'Inscrição aprovada. O calendário aparece assim que a competição for ativada.'
+            : registered
+              ? 'Registo concluído. Aguarda a ativação da competição e a geração do calendário pela plataforma.'
+              : `Estado atual da inscrição: ${registrationState}.`}
+        </p>
       </section>
     )
   }
@@ -56,7 +65,9 @@ export function CompetitionRegistrationClient({ competitionId, entryFee, silverB
       <section className="rounded-2xl border border-primary/15 bg-primary/[0.025] p-5">
         <p className="text-sm font-bold">Inscrição na competição</p>
         <p className="mt-1 text-xs leading-5 text-muted-foreground">
-          A taxa de entrada e o registo do clube são liquidados na mesma operação transacional. Nenhuma inscrição é criada se o débito falhar.
+          {entryFee > 0
+            ? 'A taxa de entrada e o registo do clube são liquidados na mesma operação transacional. Nenhuma inscrição é criada se o débito falhar.'
+            : 'A inscrição não tem taxa de entrada. O registo do clube é feito numa única operação idempotente.'}
         </p>
         <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-xs text-muted-foreground">
@@ -74,8 +85,8 @@ export function CompetitionRegistrationClient({ competitionId, entryFee, silverB
         open={open}
         onOpenChange={(next) => { if (!loading) setOpen(next) }}
         title="Confirmar inscrição"
-        description="O débito em Silver e a inscrição serão registados de forma atómica e auditável no ledger."
-        confirmLabel="Pagar e inscrever"
+        description={entryFee > 0 ? 'O débito em Silver e a inscrição serão registados de forma atómica e auditável no ledger.' : 'A inscrição será registada de forma idempotente, sem débito de Silver.'}
+        confirmLabel={entryFee > 0 ? 'Pagar e inscrever' : 'Confirmar inscrição'}
         isLoading={loading}
         onConfirm={register}
       >
