@@ -26,10 +26,11 @@ ADMIN_BOOTSTRAP_PASSWORD=<password-inicial-forte>
 Após um novo deployment com essas variáveis, executar uma única vez:
 
 ```bash
+GAMEVERSE_ORIGIN=https://game-verse-blond-beta.vercel.app
 curl --fail --silent --show-error \
   -X POST \
   -H "Authorization: Bearer $ADMIN_BOOTSTRAP_SECRET" \
-  "$NEXT_PUBLIC_APP_URL/api/internal/admin/bootstrap"
+  "$GAMEVERSE_ORIGIN/api/internal/admin/bootstrap"
 ```
 
 Em alternativa, abrir `/admin-access/setup`, introduzir apenas `ADMIN_BOOTSTRAP_SECRET` e selecionar **Criar primeiro administrador**. O browser não guarda o segredo; o email e a password continuam a ser lidos apenas no servidor a partir das variáveis de Production.
@@ -77,10 +78,11 @@ Pode ser usado o mesmo valor forte em ambas as variáveis.
 Para leilões e partidas, uma execução horária oferece melhor experiência operacional. Se existir um scheduler no servidor próprio, chamar:
 
 ```bash
+GAMEVERSE_ORIGIN=https://game-verse-blond-beta.vercel.app
 curl --fail --silent --show-error \
   -X POST \
   -H "Authorization: Bearer $INTERNAL_JOBS_SECRET" \
-  "$NEXT_PUBLIC_APP_URL/api/internal/maintenance"
+  "$GAMEVERSE_ORIGIN/api/internal/maintenance"
 ```
 
 O worker é idempotente; múltiplas chamadas não devem duplicar settlements ou domain events.

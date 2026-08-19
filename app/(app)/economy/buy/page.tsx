@@ -15,7 +15,7 @@ export default async function BuyGoldPage({ searchParams }: { searchParams: Prom
   const services = createApplicationServices(supabase)
   const catalog = await services.reads.goldCatalog.load(user.id)
   const payment = (await searchParams).payment
-  const checkoutEnabled = Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET && process.env.NEXT_PUBLIC_APP_URL)
+  const checkoutEnabled = Boolean(process.env.STRIPE_SECRET_KEY && process.env.STRIPE_WEBHOOK_SECRET)
 
   return (
     <div className="mx-auto max-w-6xl space-y-7">

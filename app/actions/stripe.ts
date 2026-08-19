@@ -3,6 +3,7 @@
 import { getStripe } from '@/lib/stripe'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getTrustedApplicationOrigin } from '@/lib/server/trusted-origin'
 
 const ALLOWED_FIAT_CURRENCIES = new Set(['eur'])
 
@@ -29,8 +30,11 @@ export async function startGoldCheckout(packageId: string) {
     throw new Error('A configuração deste pacote é inválida.')
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, '')
-  if (!appUrl) throw new Error('O checkout ainda não está configurado.')
+  const appOrigin = await getTrustedApplicationOrigin()
+  const successUrl = new URL('/economy/buy', appOrigin)
+  successUrl.searchParams.set('payment', 'success')
+  const cancelUrl = new URL('/economy/buy', appOrigin)
+  cancelUrl.searchParams.set('payment', 'cancelled')
 
   const admin = createAdminClient()
   const { data: order, error: orderError } = await admin
@@ -84,8 +88,8 @@ export async function startGoldCheckout(packageId: string) {
       line_items: [lineItem],
       client_reference_id: user.id,
       customer_email: user.email,
-      success_url: `${appUrl}/economy/buy?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${appUrl}/economy/buy?payment=cancelled`,
+      success_url: `${successUrl.toString()}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: cancelUrl.toString(),
       metadata: {
         app: 'cla-das-sombras',
         order_id: order.id,
