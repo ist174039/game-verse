@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Eye, EyeOff, ShieldCheck } from 'lucide-react'
+import { Eye, EyeOff, ShieldCheck, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,6 +18,14 @@ export function AdminLoginClient() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+
+  function friendlyLoginError(message: string) {
+    const normalized = message.toLowerCase()
+    if (normalized.includes('invalid login credentials')) return 'Email ou password incorretos. Se esta é a primeira utilização, configura primeiro o administrador.'
+    if (normalized.includes('email not confirmed')) return 'O email ainda não está confirmado no Supabase Auth.'
+    if (normalized.includes('rate limit')) return 'Foram feitas demasiadas tentativas. Aguarda alguns minutos e tenta novamente.'
+    return message
+  }
 
   async function handleLogin(event: React.FormEvent) {
     event.preventDefault()
@@ -39,7 +47,7 @@ export function AdminLoginClient() {
       router.replace(payload.mfa?.verified === true ? '/admin' : '/admin-access')
       router.refresh()
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Não foi possível iniciar a sessão administrativa.')
+      setError(friendlyLoginError(cause instanceof Error ? cause.message : 'Não foi possível iniciar a sessão administrativa.'))
     } finally {
       setLoading(false)
     }
@@ -64,6 +72,8 @@ export function AdminLoginClient() {
           {error&&<p className="rounded-lg border border-destructive/20 bg-destructive/[0.06] p-3 text-sm text-destructive">{error}</p>}
           <Button type="submit" className="h-10 w-full font-bold" disabled={loading}>{loading?'A validar…':'Entrar no Admin'}</Button>
         </form>
+
+        <Button asChild variant="outline" className="mt-3 h-10 w-full"><Link href="/admin-access/setup"><UserPlus className="h-4 w-4" />Configurar primeiro administrador</Link></Button>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">Acesso de manager? <Link href="/auth/login" className="font-semibold text-primary hover:text-primary/80">Entrar na plataforma</Link></p>
       </section>

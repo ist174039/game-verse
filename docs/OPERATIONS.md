@@ -32,6 +32,8 @@ curl --fail --silent --show-error \
   "$NEXT_PUBLIC_APP_URL/api/internal/admin/bootstrap"
 ```
 
+Em alternativa, abrir `/admin-access/setup`, introduzir apenas `ADMIN_BOOTSTRAP_SECRET` e selecionar **Criar primeiro administrador**. O browser não guarda o segredo; o email e a password continuam a ser lidos apenas no servidor a partir das variáveis de Production.
+
 O endpoint promove a conta existente ou cria a conta Auth em falta, cria/ativa `admin_user` como `super_admin`, regista `ADMIN_BOOTSTRAPPED` no audit log e fecha o bootstrap para outros utilizadores enquanto existir um administrador ativo. Depois do sucesso, remover `ADMIN_BOOTSTRAP_PASSWORD` e `ADMIN_BOOTSTRAP_SECRET` do ambiente de produção e fazer novo deployment. O acesso administrativo é feito em `/admin-access` ou diretamente em `/admin` quando já existe sessão válida.
 
 No primeiro acesso a `/admin-access`, concluir imediatamente a inscrição TOTP. Não partilhar o QR code nem a chave manual. Como o Supabase não fornece recovery codes TOTP, a perda do dispositivo exige uma recuperação privilegiada fora da aplicação: o owner do projeto remove o fator perdido através da Auth Admin MFA API e o administrador volta a inscrever TOTP no login seguinte. Nunca criar uma rota pública de bypass para este processo.
