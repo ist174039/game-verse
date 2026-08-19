@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { MarketRepository, PlayerRepository } from '@/lib/application/contracts'
 import type { MarketListing, PlayerMaster, UniversePlayer, UUID } from '@/lib/domain/core'
-import type { AuctionBid, PlayerProviderSnapshot, TransferReceipt, UniversePlayerValuation } from '@/lib/domain/player-market'
+import type { AuctionBid, PlatformPlayerPurchaseReceipt, PlayerProviderSnapshot, TransferReceipt, UniversePlayerValuation } from '@/lib/domain/player-market'
 
 const num = (value: unknown) => Number(value ?? 0)
 
@@ -125,6 +125,15 @@ export class SupabaseMarketRepository implements MarketRepository {
     })
     if (error) throw error
     return mapListing(data)
+  }
+
+  async buyPlatformPlayer(input: { universePlayerId: UUID; idempotencyKey: string }): Promise<PlatformPlayerPurchaseReceipt> {
+    const { data, error } = await this.client.rpc('buy_platform_player', {
+      p_universe_player_id: input.universePlayerId,
+      p_idempotency_key: input.idempotencyKey,
+    })
+    if (error) throw error
+    return data as PlatformPlayerPurchaseReceipt
   }
 
   async buyDirectListing(input: { listingId: UUID; idempotencyKey: string }): Promise<TransferReceipt> {

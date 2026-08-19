@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { MarketReadRepository } from '@/lib/application/read-repositories'
-import type { MarketListingReadModel, MarketReadModel } from '@/lib/application/read-models'
+import type { MarketListingReadModel, MarketReadModel, PlatformMarketPlayerReadModel } from '@/lib/application/read-models'
 import type { MarketListing, PlayerAssetStatus, PlayerMaster, UniversePlayer, UUID } from '@/lib/domain/core'
 import { mapClub, mapUniverse } from './mappers'
 
@@ -29,14 +29,48 @@ export class SupabaseMarketReadRepository implements MarketReadRepository {
     if (!universeQ.data || !clubQ.data) return null
     const buyerClub = mapClub(clubQ.data)
 
-    const [listingsQ, silverQ] = await Promise.all([
+    const [listingsQ, silverQ, platformAssetsQ] = await Promise.all([
       this.client.from('market_listing').select('*').eq('universe_id', universeId).eq('status', 'ACTIVE').order('created_at', { ascending: false }),
       this.client.from('club_currency_account').select('balance').eq('club_id', buyerClub.id).eq('currency', 'SILVER').maybeSingle(),
+      this.client
+        .from('universe_player')
+        .select('*', { count: 'exact' })
+        .eq('universe_id', universeId)
+        .eq('status', 'AVAILABLE')
+        .is('owner_club_id', null)
+        .gt('platform_price', 0)
+        .order('platform_price', { ascending: false })
+        .limit(500),
     ])
     if (listingsQ.error) throw listingsQ.error
     if (silverQ.error) throw silverQ.error
+    if (platformAssetsQ.error) throw platformAssetsQ.error
     const listings = (listingsQ.data ?? []).map(mapListing)
-    if (listings.length === 0) return { universe: mapUniverse(universeQ.data), buyerClub, silverBalance: num(silverQ.data?.balance), directListings: [], auctionListings: [] }
+    const platformAssets = (platformAssetsQ.data ?? []).map(mapAsset)
+
+    const allPlayerIds = [...new Set([
+      ...platformAssets.map(asset => asset.playerId),
+    ])]
+
+    const platformMastersQ = allPlayerIds.length > 0
+      ? await this.client.from('player_master').select('*').in('id', allPlayerIds)
+      : { data: [], error: null }
+    if (platformMastersQ.error) throw platformMastersQ.error
+    const platformMasters = new Map((platformMastersQ.data ?? []).map((row: any) => [row.id as UUID, mapMaster(row)]))
+    const platformPlayers: PlatformMarketPlayerReadModel[] = platformAssets.flatMap(asset => {
+      const player = platformMasters.get(asset.playerId)
+      return player ? [{ asset, player }] : []
+    })
+
+    if (listings.length === 0) return {
+      universe: mapUniverse(universeQ.data),
+      buyerClub,
+      silverBalance: num(silverQ.data?.balance),
+      platformPlayers,
+      platformPlayerCount: platformAssetsQ.count ?? platformPlayers.length,
+      directListings: [],
+      auctionListings: [],
+    }
 
     const assetIds = [...new Set(listings.map(listing => listing.universePlayerId))]
     const sellerIds = [...new Set(listings.map(listing => listing.sellerClubId))]
@@ -69,6 +103,8 @@ export class SupabaseMarketReadRepository implements MarketReadRepository {
 
     return {
       universe: mapUniverse(universeQ.data), buyerClub, silverBalance: num(silverQ.data?.balance),
+      platformPlayers,
+      platformPlayerCount: platformAssetsQ.count ?? platformPlayers.length,
       directListings: entries.filter(entry => entry.listing.listingType === 'DIRECT'),
       auctionListings: entries.filter(entry => entry.listing.listingType === 'AUCTION'),
     }

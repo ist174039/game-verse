@@ -1,6 +1,6 @@
 import type { Club, Competition, Match, MarketListing, PlayerMaster, Season, Universe, UniverseMembership, UniversePlayer, UserProfile, UUID } from '@/lib/domain/core'
 import type { LedgerTransaction } from '@/lib/domain/economy'
-import type { AuctionBid, PlayerProviderSnapshot, TransferReceipt, UniversePlayerValuation } from '@/lib/domain/player-market'
+import type { AuctionBid, PlatformPlayerPurchaseReceipt, PlayerProviderSnapshot, TransferReceipt, UniversePlayerValuation } from '@/lib/domain/player-market'
 import type { CompetitionParticipant, LeagueStanding, MatchDispute, MatchSettlementReceipt } from '@/lib/domain/competition'
 import type { ClubLoan, FinancialCycle, GoldToSilverFinancingReceipt, InfrastructureType, InfrastructureUpgradeReceipt, LoanRepaymentReceipt, SponsorshipContract } from '@/lib/domain/club-economy'
 import type { AchievementDefinition, BronzePurchase, BronzeStoreItem, DailyRewardClaim, MissionDefinition, UserAchievement, UserMission } from '@/lib/domain/retention'
@@ -20,6 +20,7 @@ export interface MarketRepository {
   listBids(listingId: UUID): Promise<AuctionBid[]>
   createDirectListing(input: { universePlayerId: UUID; askingPrice: number; idempotencyKey: string }): Promise<MarketListing>
   createAuctionListing(input: { universePlayerId: UUID; startingPrice: number; buyNowPrice?: number | null; endsAt: string; idempotencyKey: string }): Promise<MarketListing>
+  buyPlatformPlayer(input: { universePlayerId: UUID; idempotencyKey: string }): Promise<PlatformPlayerPurchaseReceipt>
   buyDirectListing(input: { listingId: UUID; idempotencyKey: string }): Promise<TransferReceipt>
   placeAuctionBid(input: { listingId: UUID; amount: number; idempotencyKey: string }): Promise<AuctionBid>
   settleAuction(input: { listingId: UUID; idempotencyKey: string }): Promise<TransferReceipt>
@@ -33,6 +34,7 @@ export interface ClubEconomyRepository {
   financeWithGold(input: { clubId: UUID; goldAmount: number; idempotencyKey: string }): Promise<GoldToSilverFinancingReceipt>
   originateLoan(input: { clubId: UUID; principal: number; idempotencyKey: string }): Promise<ClubLoan>
   repayLoanInstallment(input: { loanId: UUID; idempotencyKey: string }): Promise<LoanRepaymentReceipt>
+  requestSponsorshipOffer(clubId: UUID): Promise<SponsorshipContract>
   acceptSponsorship(input:{contractId:UUID;idempotencyKey:string}):Promise<SponsorshipContract>
 }
 export interface RetentionRepository {

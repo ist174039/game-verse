@@ -38,8 +38,9 @@ export interface UniverseDirectoryEntry { universe: Universe; club: Club | null;
 export interface UniverseDirectoryReadModel { entries: UniverseDirectoryEntry[]; managedUniverseIds: UUID[] }
 export interface SquadPlayerReadModel { asset: UniversePlayer; player: PlayerMaster; activeContract: PlayerContract | null }
 export interface SquadReadModel { universe: Universe; club: Club; players: SquadPlayerReadModel[]; totals: { squadSize: number; active: number; reserve: number; unavailable: number; listed: number; auction: number; contractPayroll: number; salaryReference: number; marketReferenceValue: number } }
+export interface PlatformMarketPlayerReadModel { asset: UniversePlayer; player: PlayerMaster }
 export interface MarketListingReadModel { listing: MarketListing; asset: UniversePlayer; player: PlayerMaster; sellerClub: Club; highestBid: number | null; bidCount: number }
-export interface MarketReadModel { universe: Universe; buyerClub: Club; silverBalance: number; directListings: MarketListingReadModel[]; auctionListings: MarketListingReadModel[] }
+export interface MarketReadModel { universe: Universe; buyerClub: Club; silverBalance: number; platformPlayers: PlatformMarketPlayerReadModel[]; platformPlayerCount: number; directListings: MarketListingReadModel[]; auctionListings: MarketListingReadModel[] }
 export interface MatchContextReadModel { match: Match; homeClub: Club; awayClub: Club; competition: Competition | null; isHome: boolean; canSubmit: boolean; canConfirm: boolean; canDispute: boolean }
 export interface CompetitionHubReadModel { universe: Universe; club: Club; silverBalance: number; competitions: Competition[]; activeMatches: MatchContextReadModel[]; completedMatches: MatchContextReadModel[] }
 export interface CompetitionParticipantReadModel { participant: CompetitionParticipant; club: Club }

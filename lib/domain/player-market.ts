@@ -59,3 +59,11 @@ export interface TransferReceipt {
   sellerNetAmount: number
   ledgerTransactionId: UUID
 }
+
+export interface PlatformPlayerPurchaseReceipt {
+  universePlayerId: UUID
+  buyerClubId: UUID
+  grossAmount: number
+  ledgerTransactionId: UUID
+  buyerContractId: UUID
+}
