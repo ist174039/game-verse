@@ -9,6 +9,7 @@ import { LoanOperationsClient } from '@/components/economy/loan-operations-clien
 import { SponsorshipOperationsClient } from '@/components/economy/sponsorship-operations-client'
 import { LiabilityOperationsClient } from '@/components/economy/liability-operations-client'
 import { Button } from '@/components/ui/button'
+import type { GoldFinancingStatus } from '@/lib/domain/club-economy'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,15 +27,33 @@ export default async function EconomyPage({ searchParams }: { searchParams: Prom
   const economy = await services.reads.economy.load(user.id, selected.universe.id)
   if (!economy) redirect('/onboarding')
 
-  const configResult = await supabase.rpc('get_gameplay_config', { p_key: 'economy.loan_defaults' })
+  const [configResult, financingResult] = await Promise.all([
+    supabase.rpc('get_gameplay_config', { p_key: 'economy.loan_defaults' }),
+    supabase.rpc('get_gold_financing_status', { p_club_id: economy.club.id }),
+  ])
   if (configResult.error) throw configResult.error
+  if (financingResult.error) throw financingResult.error
   const config = (configResult.data ?? {}) as Record<string, unknown>
+  const financingData = (financingResult.data ?? {}) as Record<string, unknown>
   const loanConfig = {
     enabled: Boolean(config.enabled ?? false),
     minPrincipal: Number(config.min_principal ?? 10000),
     maxPrincipal: Number(config.max_principal ?? 500000),
     interestRatePct: Number(config.interest_rate_pct ?? 6),
     installments: Number(config.installments ?? 5),
+  }
+  const financingStatus: GoldFinancingStatus = {
+    enabled: Boolean(financingData.enabled ?? false),
+    financingPolicy: String(financingData.financingPolicy ?? economy.universe.financingPolicy),
+    silverPerGold: Number(financingData.silverPerGold ?? 0),
+    maxGoldPerOperation: Number(financingData.maxGoldPerOperation ?? 0),
+    maxGoldPerCycle: Number(financingData.maxGoldPerCycle ?? 0),
+    spentGoldThisCycle: Number(financingData.spentGoldThisCycle ?? 0),
+    remainingGoldThisCycle: Number(financingData.remainingGoldThisCycle ?? 0),
+    maxSilverPerCycle: Number(financingData.maxSilverPerCycle ?? 0),
+    remainingSilverThisCycle: Number(financingData.remainingSilverThisCycle ?? 0),
+    cycleKey: String(financingData.cycleKey ?? ''),
+    resetsAt: String(financingData.resetsAt ?? new Date().toISOString()),
   }
 
   const latest = economy.cycles[0] ?? null
@@ -61,7 +80,7 @@ export default async function EconomyPage({ searchParams }: { searchParams: Prom
         <CurrencyCard kind="bronze" title="Bronze" amount={economy.balances.bronze} detail="Engagement, conquistas e colecionáveis." />
       </section>
 
-      <FinanceClubClient clubId={economy.club.id} clubName={economy.club.name} goldBalance={economy.balances.gold} financingPolicy={economy.universe.financingPolicy} />
+      <FinanceClubClient clubId={economy.club.id} clubName={economy.club.name} goldBalance={economy.balances.gold} financingStatus={financingStatus} />
       <SponsorshipOperationsClient clubId={economy.club.id} contracts={economy.sponsorships} />
       <LoanOperationsClient clubId={economy.club.id} silverBalance={economy.balances.silver} loans={economy.loans} config={loanConfig} />
       <LiabilityOperationsClient liabilities={economy.liabilities} silverBalance={economy.balances.silver} />

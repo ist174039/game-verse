@@ -1,39 +1,69 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2, ShoppingCart } from 'lucide-react'
+import { BadgeCheck, Gem, ShoppingCart, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog'
 import { startGoldCheckout } from '@/app/actions/stripe'
 import type { GoldPackage } from '@/lib/domain/payments'
 
-export function GoldCheckoutClient({ packages }: { packages: GoldPackage[] }) {
+const money = (amountCents: number, currency: string) => new Intl.NumberFormat('pt-PT', { style: 'currency', currency: currency.toUpperCase() }).format(amountCents / 100)
+const metadataNumber = (value: unknown) => {
+  const parsed = Number(value ?? 0)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+export function GoldCheckoutClient({ packages, checkoutEnabled }: { packages: GoldPackage[]; checkoutEnabled: boolean }) {
+  const [selected, setSelected] = useState<GoldPackage | null>(null)
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const checkout = async (packageId: string) => {
+  async function checkout() {
+    if (!selected) return
     setError(null)
-    setLoadingId(packageId)
+    setLoadingId(selected.id)
     try {
-      const session = await startGoldCheckout(packageId)
-      if (!session.url) throw new Error('Stripe checkout URL unavailable')
+      const session = await startGoldCheckout(selected.id)
+      if (!session.url) throw new Error('O endereço do checkout não está disponível.')
       window.location.assign(session.url)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Não foi possível iniciar o checkout')
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Não foi possível iniciar o checkout.')
       setLoadingId(null)
     }
   }
 
-  if (packages.length === 0) return <div className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-8 text-center"><p className="text-sm font-semibold">Ainda não existem pacotes Gold ativos.</p><p className="mt-2 text-xs text-muted-foreground">O checkout só é exposto quando o catálogo publicar pacotes válidos.</p></div>
+  if (packages.length === 0) return <div className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-8 text-center"><p className="text-sm font-semibold">Ainda não existem pacotes Gold ativos.</p><p className="mt-2 text-xs text-muted-foreground">O checkout só é apresentado quando o catálogo publica pacotes válidos.</p></div>
 
-  return <div className="space-y-4">
-    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      {packages.map(pkg => <article key={pkg.id} className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-5">
-        <p className="text-xs font-bold uppercase tracking-[0.15em] text-primary">{pkg.name}</p>
-        <p className="mt-4 text-3xl font-black tabular-nums">{pkg.goldAmount.toLocaleString('pt-PT')} <span className="text-base text-primary">Gold</span></p>
-        <p className="mt-2 text-sm text-muted-foreground">{new Intl.NumberFormat('pt-PT', { style:'currency', currency:pkg.fiatCurrency.toUpperCase() }).format(pkg.priceCents / 100)}</p>
-        <Button className="mt-5 w-full" disabled={loadingId !== null} onClick={() => checkout(pkg.id)}>{loadingId === pkg.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShoppingCart className="mr-2 h-4 w-4" />}Comprar Gold</Button>
-      </article>)}
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        {packages.map(pkg => {
+          const bonus = Math.max(0, metadataNumber(pkg.metadata.bonus_gold))
+          const featured = pkg.metadata.featured === true
+          const badge = typeof pkg.metadata.badge === 'string' ? pkg.metadata.badge : null
+          const description = typeof pkg.metadata.description === 'string' ? pkg.metadata.description : 'Gold global do manager.'
+          return (
+            <article key={pkg.id} className={`relative flex min-h-[310px] flex-col rounded-2xl border p-5 transition hover:-translate-y-0.5 ${featured ? 'border-primary/40 bg-[linear-gradient(180deg,rgba(242,183,5,.09),#0b0b0b_45%)] shadow-[0_18px_45px_rgba(242,183,5,.08)]' : 'border-white/[0.07] bg-[#0b0b0b] hover:border-primary/20'}`}>
+              {badge && <span className={`w-fit rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-[.12em] ${featured ? 'border-primary/30 bg-primary/[.12] text-primary' : 'border-white/[.09] bg-white/[.03] text-muted-foreground'}`}>{badge}</span>}
+              <div className="mt-5 flex items-center gap-2 text-primary"><Gem className="h-4 w-4" /><p className="text-xs font-black uppercase tracking-[0.15em]">{pkg.name}</p></div>
+              <p className="mt-3 text-3xl font-black tabular-nums">{pkg.goldAmount.toLocaleString('pt-PT')} <span className="text-sm text-primary">Gold</span></p>
+              {bonus > 0 ? <p className="mt-2 flex items-center gap-1.5 text-xs font-bold text-[var(--success)]"><Sparkles className="h-3.5 w-3.5" />Inclui {bonus.toLocaleString('pt-PT')} Gold de bónus</p> : <p className="mt-2 text-xs text-muted-foreground">Pacote de entrada sem bónus.</p>}
+              <p className="mt-4 text-xs leading-5 text-muted-foreground">{description}</p>
+              <div className="mt-auto pt-5"><p className="text-xl font-black">{money(pkg.priceCents, pkg.fiatCurrency)}</p><Button className="mt-3 w-full" disabled={!checkoutEnabled || loadingId !== null} onClick={() => { setError(null); setSelected(pkg) }}><ShoppingCart className="h-4 w-4" />{checkoutEnabled ? 'Selecionar' : 'Indisponível'}</Button></div>
+            </article>
+          )
+        })}
+      </div>
+
+      {error && !selected && <div className="rounded-xl border border-destructive/20 bg-destructive/[0.06] p-3 text-sm text-destructive">{error}</div>}
+
+      <ConfirmationDialog open={Boolean(selected)} onOpenChange={open => { if (!open && loadingId === null) { setSelected(null); setError(null) } }} title="Confirmar pacote Gold" description="Serás encaminhado para o Stripe Checkout. O Gold só entra no saldo depois da confirmação do pagamento, não é convertido automaticamente e não aumenta o limite semanal de financiamento." confirmLabel="Continuar para pagamento" isLoading={loadingId !== null} onConfirm={checkout}>
+        {selected && <div className="space-y-3 rounded-xl border border-white/[0.07] bg-black/20 p-4 text-sm"><div className="flex items-center gap-2 text-primary"><BadgeCheck className="h-4 w-4" /><p className="font-black">{selected.name}</p></div><Summary label="Gold total" value={selected.goldAmount.toLocaleString('pt-PT')} /><Summary label="Bónus incluído" value={Math.max(0, metadataNumber(selected.metadata.bonus_gold)).toLocaleString('pt-PT')} /><Summary label="Total a pagar" value={money(selected.priceCents, selected.fiatCurrency)} />{error && <p className="rounded-lg border border-destructive/20 bg-destructive/[.05] px-3 py-2 text-xs text-destructive">{error}</p>}</div>}
+      </ConfirmationDialog>
     </div>
-    {error && <div className="rounded-xl border border-destructive/20 bg-destructive/[0.06] p-3 text-sm text-destructive">{error}</div>}
-  </div>
+  )
+}
+
+function Summary({ label, value }: { label: string; value: string }) {
+  return <div className="flex items-center justify-between gap-4"><span className="text-muted-foreground">{label}</span><span className="font-black tabular-nums">{value}</span></div>
 }

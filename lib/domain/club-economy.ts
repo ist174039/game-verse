@@ -55,6 +55,24 @@ export interface GoldToSilverFinancingReceipt {
   goldSpent: number
   silverCredited: number
   transactionId: UUID
+  cycleKey: string
+  cycleGoldLimit: number
+  cycleGoldSpent: number
+  cycleGoldRemaining: number
+}
+
+export interface GoldFinancingStatus {
+  enabled: boolean
+  financingPolicy: string
+  silverPerGold: number
+  maxGoldPerOperation: number
+  maxGoldPerCycle: number
+  spentGoldThisCycle: number
+  remainingGoldThisCycle: number
+  maxSilverPerCycle: number
+  remainingSilverThisCycle: number
+  cycleKey: string
+  resetsAt: ISODateTime
 }
 
 export interface InfrastructureUpgradeReceipt {
