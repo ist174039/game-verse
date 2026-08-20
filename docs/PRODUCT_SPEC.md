@@ -37,9 +37,14 @@
 
 ### Utilizador global
 - identidade, autenticação, manager XP/level, Gold, Bronze, achievements globais e reputação.
+- username e fotografia/avatar são identidade editável pelo próprio manager.
+- manager level, XP e reputação são progressão protegida e nunca são editáveis diretamente pelo browser.
 
 ### Clube por universo
 - identidade, Silver, Elo, divisão, classificação, prestígio, adeptos, plantel, infraestruturas, património, dívidas, troféus e histórico.
+- cada clube tem emblema, nome e lema próprios.
+- cada clube pode manter três equipamentos de identidade visual: HOME, AWAY e THIRD.
+- equipamentos não alteram ratings, resultados ou vantagens competitivas.
 
 ### Métricas separadas
 - Elo: força competitiva atual, sobe/desce.
@@ -226,6 +231,8 @@ Governance do Universo Principal inclui temporada, divisões, Liga, Taça, calen
 - Liga/Taça/temporadas
 
 ### Club Management
+- identidade do manager e clube
+- avatar, emblema e três equipamentos
 - infraestruturas
 - adeptos
 - patrocinadores
@@ -242,3 +249,34 @@ Governance do Universo Principal inclui temporada, divisões, Liga, Taça, calen
 - backoffice
 - moderation/fraud
 - refunds/grants/configuration/audit
+
+## 17. Baseline funcional da v1 para produção
+
+A v1 é o baseline que deve estar funcionalmente alinhado e validado antes do E2E final. Funcionalidades de roadmap não devem aparecer na interface como ações disponíveis.
+
+### Incluído na v1
+- autenticação e identidade global do manager;
+- edição de username e avatar;
+- participação em múltiplos universos e um clube por universo;
+- emblema, nome, lema e equipamentos HOME/AWAY/THIRD por clube;
+- dashboard, clube, plantel, calendário e ranking contextualizados ao universo;
+- mercado primário, venda direta e leilões;
+- Gold, Silver, Bronze, Stripe, ledger, financiamento, empréstimos, liabilities e patrocínios;
+- competições, partidas, lineup, resultado, confirmação, disputa e settlement;
+- Daily, missões, achievements e Bronze Store;
+- comunidades, posts, chat de comunidade e mensagens diretas;
+- Admin Control Center, RBAC/MFA, backoffice e auditoria;
+- provider externo de jogadores desacoplado do gameplay normal, com tolerância a rate limiting.
+
+### Pós-v1 / não bloqueia produção
+- Quick Sell;
+- Season Pass completo;
+- criação self-service de universos comunitários;
+- disciplina avançada/sanções desportivas dedicadas;
+- experiência completa de Follow/Friends/Rivalidades;
+- chat específico legado de tournament;
+- seleção de HOME/AWAY/THIRD no pré-jogo e regras visuais automáticas;
+- estados financeiros avançados HEALTHY/PRESSURE/CRITICAL/INSOLVENT/ADMINISTRATION quando ainda não estiverem operacionalizados end-to-end.
+
+### Regra de exposição
+Uma funcionalidade pós-v1 pode existir no domínio ou roadmap, mas não pode ser apresentada como botão/CTA operacional enquanto não tiver persistência, autorização, regras de negócio e fluxo completo. Estados indisponíveis devem ser informação, não ações falsas.

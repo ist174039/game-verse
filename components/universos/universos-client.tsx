@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Crown, Globe2, LockKeyhole, ShieldCheck, Users2, WalletCards } from 'lucide-react'
+import { Crown, Globe2, ShieldCheck, Users2, WalletCards } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { UniverseDirectoryReadModel } from '@/lib/application/read-models'
 
@@ -11,84 +11,18 @@ export function UniversosClient({ directory }: UniversosClientProps) {
   const official = directory.entries.find(entry => entry.universe.kind === 'MAIN')
   const community = directory.entries.filter(entry => entry.universe.kind === 'COMMUNITY')
 
-  return (
-    <div className="space-y-6 sm:space-y-7">
-      <section className="brand-watermark rounded-2xl border border-white/[0.07] bg-[#0b0b0b] px-5 py-6 sm:px-7">
-        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="clan-kicker">Universos</p>
-            <h1 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">A tua carreira existe em vários contextos.</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">Cada universo isola clube, Silver, plantel, mercado, épocas e competições. Gold, Bronze e identidade do manager continuam globais.</p>
-          </div>
-          <Button disabled title="Criação de universos comunitários ainda não está ativa"><LockKeyhole className="mr-2 h-4 w-4" />Criar universo</Button>
-        </div>
-      </section>
-
-      {official ? <UniverseCard entry={official} featured /> : <EmptyUniverse />}
-
-      <section>
-        <div className="mb-4 flex items-end justify-between gap-4">
-          <div><p className="clan-kicker">Comunidade</p><h2 className="mt-1 text-xl font-black tracking-tight">Universos disponíveis</h2></div>
-          <p className="text-xs text-muted-foreground">{community.length} disponível{community.length === 1 ? '' : 'eis'}</p>
-        </div>
-        {community.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-white/[0.08] bg-black/15 px-6 py-10 text-center text-sm text-muted-foreground">Ainda não existem universos comunitários ativos.</div>
-        ) : (
-          <div className="grid gap-4 xl:grid-cols-2">{community.map(entry => <UniverseCard key={entry.universe.id} entry={entry} />)}</div>
-        )}
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-3">
-        <Rule icon={Globe2} title="Contexto isolado" text="Silver, jogadores, mercado, temporadas e competições pertencem sempre ao universo." />
-        <Rule icon={Users2} title="Um clube por universo" text="O mesmo manager pode ter clubes distintos sem misturar património ou resultados." />
-        <Rule icon={ShieldCheck} title="Governance explícita" text="Entrada, financiamento e economia são regras do universo e não da interface." />
-      </section>
-    </div>
-  )
+  return <div className="space-y-6 sm:space-y-7">
+    <section className="brand-watermark rounded-2xl border border-white/[0.07] bg-[#0b0b0b] px-5 py-6 sm:px-7"><p className="clan-kicker">Universos</p><h1 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">A tua carreira existe em vários contextos.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">Cada universo isola clube, Silver, plantel, mercado, épocas e competições. Gold, Bronze e identidade do manager continuam globais.</p></section>
+    {official ? <UniverseCard entry={official} featured /> : <EmptyUniverse />}
+    <section><div className="mb-4 flex items-end justify-between gap-4"><div><p className="clan-kicker">Comunidade</p><h2 className="mt-1 text-xl font-black tracking-tight">Universos disponíveis</h2></div><p className="text-xs text-muted-foreground">{community.length} disponível{community.length === 1 ? '' : 'eis'}</p></div>{community.length === 0 ? <div className="rounded-2xl border border-dashed border-white/[0.08] bg-black/15 px-6 py-10 text-center text-sm text-muted-foreground">Ainda não existem universos comunitários ativos.</div> : <div className="grid gap-4 xl:grid-cols-2">{community.map(entry => <UniverseCard key={entry.universe.id} entry={entry} />)}</div>}</section>
+    <section className="grid gap-4 md:grid-cols-3"><Rule icon={Globe2} title="Contexto isolado" text="Silver, jogadores, mercado, temporadas e competições pertencem sempre ao universo." /><Rule icon={Users2} title="Um clube por universo" text="O mesmo manager pode ter clubes distintos sem misturar património ou resultados." /><Rule icon={ShieldCheck} title="Governance explícita" text="Entrada, financiamento e economia são regras do universo e não da interface." /></section>
+  </div>
 }
 
 function UniverseCard({ entry, featured = false }: { entry: UniverseDirectoryReadModel['entries'][number]; featured?: boolean }) {
   const { universe, club, membershipRole } = entry
-  return (
-    <article className={`overflow-hidden rounded-2xl border p-5 sm:p-6 ${featured ? 'border-primary/20 bg-[radial-gradient(circle_at_85%_0%,rgba(245,191,22,.10),transparent_35%),#0b0b0b]' : 'border-white/[0.07] bg-[#0b0b0b]'}`}>
-      <div className="flex items-start gap-4">
-        <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border ${featured ? 'border-primary/20 bg-primary/[0.07] text-primary' : 'border-white/[0.07] bg-white/[0.03] text-muted-foreground'}`}>
-          {universe.kind === 'MAIN' ? <Crown className="h-5 w-5" /> : <Globe2 className="h-5 w-5" />}
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-xl font-black tracking-tight">{universe.name}</h2>
-            <Tag>{universe.kind === 'MAIN' ? 'OFICIAL' : 'COMUNIDADE'}</Tag>
-            <Tag>{universe.state}</Tag>
-          </div>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">{universe.description || 'Sem descrição publicada.'}</p>
-        </div>
-      </div>
-
-      <div className="mt-5 grid gap-px overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.06] sm:grid-cols-4">
-        <Datum label="Entrada" value={universe.accessPolicy} />
-        <Datum label="Economia" value={universe.economicProfile} />
-        <Datum label="Financiamento" value={universe.financingPolicy} />
-        <Datum label="Starting Silver" value={universe.startingSilver.toLocaleString('pt-PT')} />
-      </div>
-
-      <div className="mt-5 flex flex-col gap-3 border-t border-white/[0.06] pt-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          {club ? <p className="text-sm font-semibold text-foreground">Clube: <span className="text-primary">{club.name}</span></p> : <p className="text-sm text-muted-foreground">Ainda não tens clube neste universo.</p>}
-          {membershipRole && <p className="mt-1 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Role · {membershipRole}</p>}
-        </div>
-        {club ? (
-          <Button asChild size="sm"><Link href={`/dashboard?universe=${universe.id}`}>Entrar no universo</Link></Button>
-        ) : universe.accessPolicy === 'PUBLIC' ? (
-          <Button asChild variant="outline" size="sm"><Link href="/onboarding">Criar clube</Link></Button>
-        ) : (
-          <Button disabled variant="outline" size="sm">Entrada {universe.accessPolicy.toLowerCase()}</Button>
-        )}
-      </div>
-    </article>
-  )
+  return <article className={`overflow-hidden rounded-2xl border p-5 sm:p-6 ${featured ? 'border-primary/20 bg-[radial-gradient(circle_at_85%_0%,rgba(245,191,22,.10),transparent_35%),#0b0b0b]' : 'border-white/[0.07] bg-[#0b0b0b]'}`}><div className="flex items-start gap-4"><div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border ${featured ? 'border-primary/20 bg-primary/[0.07] text-primary' : 'border-white/[0.07] bg-white/[0.03] text-muted-foreground'}`}>{universe.kind === 'MAIN' ? <Crown className="h-5 w-5" /> : <Globe2 className="h-5 w-5" />}</div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h2 className="text-xl font-black tracking-tight">{universe.name}</h2><Tag>{universe.kind === 'MAIN' ? 'OFICIAL' : 'COMUNIDADE'}</Tag><Tag>{universe.state}</Tag></div><p className="mt-2 text-sm leading-6 text-muted-foreground">{universe.description || 'Sem descrição publicada.'}</p></div></div><div className="mt-5 grid gap-px overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.06] sm:grid-cols-4"><Datum label="Entrada" value={universe.accessPolicy} /><Datum label="Economia" value={universe.economicProfile} /><Datum label="Financiamento" value={universe.financingPolicy} /><Datum label="Starting Silver" value={universe.startingSilver.toLocaleString('pt-PT')} /></div><div className="mt-5 flex flex-col gap-3 border-t border-white/[0.06] pt-4 sm:flex-row sm:items-center sm:justify-between"><div>{club ? <p className="text-sm font-semibold text-foreground">Clube: <span className="text-primary">{club.name}</span></p> : <p className="text-sm text-muted-foreground">Ainda não tens clube neste universo.</p>}{membershipRole && <p className="mt-1 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Role · {membershipRole}</p>}</div>{club ? <Button asChild size="sm"><Link href={`/dashboard?universe=${universe.id}`}>Entrar no universo</Link></Button> : universe.accessPolicy === 'PUBLIC' ? <Button asChild variant="outline" size="sm"><Link href={`/onboarding?universe=${encodeURIComponent(universe.id)}`}>Criar clube</Link></Button> : <span className="rounded-md border border-white/[.07] px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[.11em] text-muted-foreground">Entrada {universe.accessPolicy.toLowerCase()}</span>}</div></article>
 }
-
 function EmptyUniverse() { return <div className="rounded-2xl border border-dashed border-primary/15 bg-primary/[0.025] p-6 text-sm text-muted-foreground">O Universo Principal ainda não está disponível no schema atual.</div> }
 function Datum({ label, value }: { label: string; value: string }) { return <div className="bg-[#0b0b0b] p-3"><p className="text-[9px] font-bold uppercase tracking-[0.14em] text-muted-foreground">{label}</p><p className="mt-1 truncate text-xs font-bold text-foreground">{value}</p></div> }
 function Tag({ children }: { children: React.ReactNode }) { return <span className="rounded-md border border-white/[0.08] bg-white/[0.025] px-2 py-1 text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{children}</span> }

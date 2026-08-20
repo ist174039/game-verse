@@ -1,6 +1,7 @@
 import {createClient} from '@/lib/supabase/server'
 import {createApplicationServices} from '@/lib/infrastructure/repositories/supabase/factory'
 import {redirect} from 'next/navigation'
+import {resolveOwnedUniverseContext,onboardingHref} from '@/lib/server/active-universe'
 import {DashboardHeader} from '@/components/dashboard/dashboard-header'
 import {DashboardUniverseSwitcher} from '@/components/dashboard/dashboard-universe-switcher'
 import {DashboardCommandCenter} from '@/components/dashboard/dashboard-command-center'
@@ -15,11 +16,11 @@ export default async function DashboardPage({searchParams}:{searchParams:Promise
   const supabase=await createClient();const{data:{user}}=await supabase.auth.getUser();if(!user||user.is_anonymous)redirect('/auth/login')
   const services=createApplicationServices(supabase);const requestedUniverseId=(await searchParams).universe
   const directory=await services.reads.universeDirectory.load(user.id)
-  const owned=[...directory.entries.filter(entry=>entry.club)].sort((a,b)=>Number(b.universe.kind==='MAIN')-Number(a.universe.kind==='MAIN'))
-  const selected=(requestedUniverseId?owned.find(entry=>entry.universe.id===requestedUniverseId):null)??owned[0]??null
+  const{selected,onboardingUniverseId}=resolveOwnedUniverseContext(directory.entries,requestedUniverseId)
+  if(onboardingUniverseId)redirect(onboardingHref(onboardingUniverseId))
   if(!selected?.club)redirect('/onboarding')
   const dashboard=await services.reads.dashboard.load(user.id,selected.universe.id)
-  if(!dashboard)redirect('/onboarding')
+  if(!dashboard)redirect(onboardingHref(selected.universe.id))
 
   return <div className="space-y-5 sm:space-y-6">
     <DashboardHeader username={dashboard.user.username||'Manager'} isNewUser={dashboard.user.managerXp===0}/>
