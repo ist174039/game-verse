@@ -3,10 +3,33 @@ import { notFound, redirect } from 'next/navigation'
 import { ArrowLeft, CalendarDays, Shield, Swords, Trophy, Users } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { createApplicationServices } from '@/lib/infrastructure/repositories/supabase/factory'
-import { CompetitionRegistrationClient } from '@/components/competitions/competition-registration-client'
+import { CompetitionRegistrationClient, type CompetitionRegistrationReadiness } from '@/components/competitions/competition-registration-client'
 import { Button } from '@/components/ui/button'
 
 export const dynamic = 'force-dynamic'
+
+function readinessFromData(data: unknown): CompetitionRegistrationReadiness | null {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return null
+  const row = data as Record<string, unknown>
+  const n = (value: unknown) => Number(value ?? 0)
+  return {
+    runtimeAvailable: true,
+    ready: Boolean(row.ready),
+    reason: typeof row.reason === 'string' ? row.reason : null,
+    registrationOpen: Boolean(row.registration_open),
+    competitionStatus: typeof row.competition_status === 'string' ? row.competition_status : '',
+    entryFee: n(row.entry_fee),
+    silverBalance: n(row.silver_balance),
+    silverSufficient: Boolean(row.silver_sufficient),
+    clubId: typeof row.club_id === 'string' ? row.club_id : null,
+    registrationState: typeof row.registration_state === 'string' ? row.registration_state : null,
+    eligiblePlayers: n(row.eligible_players),
+    minSquadSize: n(row.min_squad_size),
+    missingPlayers: n(row.missing_players),
+    rosterEligible: Boolean(row.roster_eligible),
+    economicFrozen: Boolean(row.economic_frozen),
+  }
+}
 
 export default async function CompetitionDetailPage({ params }: { params: Promise<{ id:string }> }) {
   const { id } = await params
@@ -19,6 +42,37 @@ export default async function CompetitionDetailPage({ params }: { params: Promis
   const economy = detail.viewerClub ? await services.reads.economy.load(user.id, detail.universe.id) : null
   const silverBalance = economy?.balances.silver ?? 0
 
+  let readiness: CompetitionRegistrationReadiness | null = null
+  if (detail.viewerClub && !detail.registration) {
+    const { data, error } = await supabase.rpc('competition_registration_readiness', { p_competition_id: detail.competition.id })
+    if (error) {
+      const record = error as unknown as Record<string, unknown>
+      const code = typeof record.code === 'string' ? record.code : ''
+      const message = typeof record.message === 'string' ? record.message : ''
+      const missingRuntime = code === 'PGRST202' || code === '42883' || /competition_registration_readiness/i.test(message)
+      readiness = {
+        runtimeAvailable: false,
+        ready: false,
+        reason: missingRuntime ? 'competition_runtime_not_migrated' : 'competition_registration_failed',
+        registrationOpen: ['DRAFT','REGISTRATION','OPEN'].includes(detail.competition.status),
+        competitionStatus: detail.competition.status,
+        entryFee: detail.competition.entryFee,
+        silverBalance,
+        silverSufficient: silverBalance >= detail.competition.entryFee,
+        clubId: detail.viewerClub.id,
+        registrationState: null,
+        eligiblePlayers: 0,
+        minSquadSize: 0,
+        missingPlayers: 0,
+        rosterEligible: false,
+        economicFrozen: false,
+      }
+      console.error('[competition-readiness]', { competitionId: detail.competition.id, code, message })
+    } else {
+      readiness = readinessFromData(data)
+    }
+  }
+
   return <div className="space-y-7">
     <Link href={`/tournaments?universe=${detail.universe.id}`} className="inline-flex items-center gap-2 text-sm text-muted-foreground transition hover:text-foreground"><ArrowLeft className="h-4 w-4" />Voltar às competições</Link>
 
@@ -26,7 +80,7 @@ export default async function CompetitionDetailPage({ params }: { params: Promis
 
     <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Metric icon={Users} label="Participantes" value={detail.participants.length.toString()} detail={detail.viewerClub ? `Teu clube: ${detail.viewerClub.name}` : 'Sem clube neste universo'} /><Metric icon={CalendarDays} label="Rounds" value={detail.rounds.length.toString()} detail={`${detail.fixtures.length} partida(s) agendada(s/registada(s))`} /><Metric icon={Trophy} label="Prize pool" value={`${detail.competition.prizePool.toLocaleString('pt-PT')} S`} detail={`Taxa de entrada: ${detail.competition.entryFee.toLocaleString('pt-PT')} S`} /><Metric icon={Shield} label="Inscrição" value={detail.registration?.state ?? 'SEM REGISTO'} detail={detail.registration ? `${detail.registration.entryFeePaid.toLocaleString('pt-PT')} S liquidados` : `${silverBalance.toLocaleString('pt-PT')} S disponíveis`} /></section>
 
-    {detail.viewerClub ? <CompetitionRegistrationClient competitionId={detail.competition.id} entryFee={detail.competition.entryFee} silverBalance={silverBalance} registrationState={detail.registration?.state ?? null} status={detail.competition.status} /> : <section className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-5"><p className="text-sm font-bold">É necessário um clube neste universo</p><p className="mt-1 text-xs text-muted-foreground">Cria ou ativa um clube neste universo antes de te inscreveres na competição.</p></section>}
+    {detail.viewerClub ? <CompetitionRegistrationClient competitionId={detail.competition.id} universeId={detail.universe.id} entryFee={detail.competition.entryFee} silverBalance={silverBalance} registrationState={detail.registration?.state ?? null} status={detail.competition.status} readiness={readiness} /> : <section className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-5"><p className="text-sm font-bold">É necessário um clube neste universo</p><p className="mt-1 text-xs text-muted-foreground">Cria ou ativa um clube neste universo antes de te inscreveres na competição.</p></section>}
 
     {detail.standings.length > 0 && <section className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-5 sm:p-6"><SectionTitle kicker="Classificação" title="League standing" /><div className="mt-5 overflow-x-auto"><table className="w-full min-w-[680px] text-sm"><thead><tr className="border-b border-white/[0.07] text-left text-[10px] uppercase tracking-[0.13em] text-muted-foreground"><th className="pb-3">#</th><th className="pb-3">Clube</th><th className="pb-3 text-center">J</th><th className="pb-3 text-center">V</th><th className="pb-3 text-center">E</th><th className="pb-3 text-center">D</th><th className="pb-3 text-center">GM</th><th className="pb-3 text-center">GS</th><th className="pb-3 text-right">Pts</th></tr></thead><tbody>{detail.standings.map(({standing,club},index)=><tr key={club.id} className="border-b border-white/[0.05]"><td className="py-3 font-black">{standing.position ?? index+1}</td><td className="py-3 font-semibold">{club.name}</td><td className="py-3 text-center">{standing.played}</td><td className="py-3 text-center">{standing.won}</td><td className="py-3 text-center">{standing.drawn}</td><td className="py-3 text-center">{standing.lost}</td><td className="py-3 text-center">{standing.goalsFor}</td><td className="py-3 text-center">{standing.goalsAgainst}</td><td className="py-3 text-right font-black text-primary">{standing.points}</td></tr>)}</tbody></table></div></section>}
 
