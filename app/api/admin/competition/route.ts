@@ -23,9 +23,12 @@ function normalizeCompetitionError(error:unknown){
   const hint=typeof record.hint==='string'?record.hint:''
   const diagnostic=`${message} ${details} ${hint}`
   const missingRuntime=code==='PGRST202'||(/could not find/i.test(diagnostic)&&/service_(activate|progress)_competition/i.test(diagnostic))
+  const schemaMismatch=code==='42804'&&/match_state/i.test(diagnostic)
   const clientError=missingRuntime
     ?'competition_runtime_not_migrated'
-    :knownCompetitionErrors.find(key=>diagnostic.includes(key))??'competition_operation_failed'
+    :schemaMismatch
+      ?'competition_runtime_schema_mismatch'
+      :knownCompetitionErrors.find(key=>diagnostic.includes(key))??'competition_operation_failed'
   return{clientError,message,code,details,hint}
 }
 

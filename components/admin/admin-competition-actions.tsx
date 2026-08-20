@@ -12,6 +12,7 @@ const competitionErrorMessages:Record<string,string>={
   competition_not_activatable:'O estado atual desta competição não permite ativação.',
   competition_type_not_schedulable:'Este formato não suporta geração automática de calendário.',
   competition_runtime_not_migrated:'O runtime de competições ainda não está alinhado com a base de dados.',
+  competition_runtime_schema_mismatch:'O runtime do calendário está incompatível com o schema da base de dados. A migration 00520 tem de estar aplicada.',
   competition_not_found:'A competição já não existe.',
   competition_already_completed:'Esta competição já está concluída.',
   invalid_round_interval:'O intervalo entre jornadas é inválido.',
