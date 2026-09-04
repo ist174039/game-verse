@@ -91,11 +91,12 @@ O worker é idempotente; múltiplas chamadas não devem duplicar settlements ou 
 
 `next.config.mjs` não ignora erros TypeScript. Um deployment Vercel só deve chegar a `READY` quando o build Next.js passa com o typecheck efetivo.
 
-O GitHub Actions `Application quality` continua a executar:
+A checklist completa de promoção, incluindo os gates funcional, visual, Supabase/Vercel e rollback, está em [`docs/PRODUCTION_GATE.md`](./PRODUCTION_GATE.md).
+
+O GitHub Actions `Application quality` executa o gate completo:
 
 ```text
-pnpm run quality:domain
-pnpm run typecheck
+pnpm run quality:production
 ```
 
 ## Operação diária
