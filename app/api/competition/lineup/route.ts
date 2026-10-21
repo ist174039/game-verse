@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { allowlistedErrorCode } from '@/lib/server/safe-error-code'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -24,6 +25,6 @@ export async function POST(request: Request) {
     if (error) throw error
     return NextResponse.json({ lineup: data })
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'save_lineup_failed' }, { status: 409 })
+    return NextResponse.json({ error: allowlistedErrorCode(error, ['match_not_found', 'not_match_participant', 'invalid_lineup', 'match_not_ready'], 'save_lineup_failed') }, { status: 409 })
   }
 }

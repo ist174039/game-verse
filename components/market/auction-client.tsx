@@ -6,6 +6,7 @@ import { Gavel, ShieldCheck, WalletCards } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog'
+import { EmptyState } from '@/components/ui/async-state'
 import { MarketListingCard } from '@/components/market/market-listing-card'
 import type { MarketListingReadModel, MarketReadModel } from '@/lib/application/read-models'
 
@@ -53,7 +54,7 @@ export function AuctionClient({ market }: { market: MarketReadModel }) {
     <>
       {error && !selected && <div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-3 text-sm text-red-300">Licitação recusada: {error}</div>}
       {market.auctionListings.length === 0 ? (
-        <div className="clan-panel-neutral flex min-h-72 flex-col items-center justify-center rounded-2xl p-8 text-center"><Gavel className="h-10 w-10 text-primary/45" /><h2 className="mt-4 text-xl font-black">Sem leilões ativos</h2><p className="mt-2 text-sm text-muted-foreground">Quando uma listagem AUCTION estiver ativa neste universo, aparece aqui automaticamente.</p></div>
+        <EmptyState title="Sem leilões ativos" description="Quando uma listagem AUCTION estiver ativa neste universo, aparece aqui automaticamente." className="clan-panel-neutral min-h-72 rounded-2xl p-8" />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {market.auctionListings.map(entry => (

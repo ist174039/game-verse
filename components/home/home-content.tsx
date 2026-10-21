@@ -80,7 +80,7 @@ export function HomeContent() {
         <section className="relative isolate min-h-[760px] pt-20 lg:min-h-[880px]">
           <div className="absolute inset-0 -z-20 bg-[radial-gradient(circle_at_70%_36%,rgba(242,183,5,0.14),transparent_27%),radial-gradient(circle_at_50%_100%,rgba(242,183,5,0.06),transparent_35%)]" />
           <div className="absolute inset-0 -z-20 opacity-40 [background-image:linear-gradient(rgba(255,255,255,.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.025)_1px,transparent_1px)] [background-size:72px_72px] [mask-image:linear-gradient(to_bottom,black,transparent_85%)]" />
-          <div className="absolute right-[-12rem] top-24 -z-10 h-[680px] w-[680px] opacity-[0.16] sm:right-[-8rem] lg:right-[2%] lg:top-28 lg:h-[760px] lg:w-[760px]">
+          <div className="absolute right-[-13rem] top-32 -z-10 h-[520px] w-[520px] opacity-[0.045] sm:right-[-8rem] sm:top-24 sm:h-[600px] sm:w-[600px] sm:opacity-[0.1] lg:right-[2%] lg:top-28 lg:h-[760px] lg:w-[760px] lg:opacity-[0.16]">
             <Image src="/brand/clan-logo.svg" alt="" fill className="object-contain" priority />
           </div>
 
@@ -106,9 +106,9 @@ export function HomeContent() {
               </div>
 
               <div className="mt-14 grid max-w-2xl grid-cols-3 border-y border-white/[0.07] py-5">
-                <div><p className="text-xl font-black text-[#f2b705]">1</p><p className="mt-1 text-xs uppercase tracking-[0.12em] text-white/38">Clube por universo</p></div>
-                <div className="border-x border-white/[0.07] px-5"><p className="text-xl font-black text-white">3</p><p className="mt-1 text-xs uppercase tracking-[0.12em] text-white/38">Moedas especializadas</p></div>
-                <div className="pl-5"><p className="text-xl font-black text-white">∞</p><p className="mt-1 text-xs uppercase tracking-[0.12em] text-white/38">Histórias para criar</p></div>
+                <div className="min-w-0 pr-2"><p className="text-xl font-black text-[#f2b705]">1</p><p className="mt-1 text-[9px] leading-4 uppercase tracking-[0.07em] text-white/45 sm:text-xs sm:tracking-[0.12em]">Clube por universo</p></div>
+                <div className="min-w-0 border-x border-white/[0.07] px-2 sm:px-5"><p className="text-xl font-black text-white">3</p><p className="mt-1 text-[9px] leading-4 uppercase tracking-[0.07em] text-white/45 sm:text-xs sm:tracking-[0.12em]">Moedas especializadas</p></div>
+                <div className="min-w-0 pl-2 sm:pl-5"><p className="text-xl font-black text-white">∞</p><p className="mt-1 text-[9px] leading-4 uppercase tracking-[0.07em] text-white/45 sm:text-xs sm:tracking-[0.12em]">Histórias para criar</p></div>
               </div>
             </div>
 

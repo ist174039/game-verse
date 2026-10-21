@@ -29,7 +29,7 @@ function normalizeCompetitionError(error:unknown){
     :schemaMismatch
       ?'competition_runtime_schema_mismatch'
       :knownCompetitionErrors.find(key=>diagnostic.includes(key))??'competition_operation_failed'
-  return{clientError,message,code,details,hint}
+  return{clientError,code}
 }
 
 export async function POST(request:Request){
@@ -109,10 +109,7 @@ export async function POST(request:Request){
     console.error('[admin-competition]',{
       action,
       competitionId:competitionId||null,
-      message:normalized.message,
       code:normalized.code,
-      details:normalized.details,
-      hint:normalized.hint,
     })
     return NextResponse.json({error:normalized.clientError},{status:409})
   }

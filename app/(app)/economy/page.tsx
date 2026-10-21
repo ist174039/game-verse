@@ -10,6 +10,7 @@ import { LoanOperationsClient } from '@/components/economy/loan-operations-clien
 import { SponsorshipOperationsClient } from '@/components/economy/sponsorship-operations-client'
 import { LiabilityOperationsClient } from '@/components/economy/liability-operations-client'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/async-state'
 import type { GoldFinancingStatus } from '@/lib/domain/club-economy'
 
 export const dynamic = 'force-dynamic'
@@ -62,4 +63,4 @@ function CurrencyCard({kind,title,amount,detail}:{kind:'gold'|'silver'|'bronze';
 function Metric({icon:Icon,label,value,detail,danger=false}:{icon:typeof Gem;label:string;value:string;detail:string;danger?:boolean}){return <article className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-5"><Icon className={`h-4 w-4 ${danger?'text-destructive':'text-primary'}`}/><p className={`mt-3 text-xl font-black ${danger?'text-destructive':''}`}>{value}</p><p className="mt-1 text-xs text-muted-foreground">{label} · {detail}</p></article>}
 function Summary({title,rows}:{title:string;rows:[string,string][]}){return <article className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-5"><div className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-primary"/><h3 className="text-sm font-bold">{title}</h3></div><div className="mt-4 divide-y divide-white/[0.06]">{rows.map(([label,value])=><div key={label} className="flex justify-between gap-4 py-2.5 text-xs"><span className="text-muted-foreground">{label}</span><span className="font-bold">{value}</span></div>)}</div></article>}
 function signed(value:number){return`${value>=0?'+':''}${value.toLocaleString('pt-PT')}`}
-function Empty(){return <p className="py-10 text-center text-sm text-muted-foreground">Ainda não existem movimentos.</p>}
+function Empty(){return <EmptyState title="Ainda não existem movimentos" description="As operações do clube aparecerão aqui quando forem registadas no ledger." className="min-h-28 rounded-xl border-white/[.06] px-3"/>}

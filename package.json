@@ -10,8 +10,9 @@
     "typecheck": "tsc --noEmit",
     "typecheck:domain": "tsc -p tsconfig.domain.json --noEmit",
     "check:boundaries": "node scripts/check-domain-boundaries.mjs",
+    "check:api-auth": "node scripts/check-api-auth-boundaries.mjs",
     "check:production-env": "node scripts/check-production-env.mjs",
-    "quality:domain": "pnpm run typecheck:domain && pnpm run check:boundaries",
+    "quality:domain": "pnpm run typecheck:domain && pnpm run check:boundaries && pnpm run check:api-auth",
     "quality:production": "pnpm run quality:domain && pnpm run typecheck && pnpm run build"
   },
   "dependencies": {

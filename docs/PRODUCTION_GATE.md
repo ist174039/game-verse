@@ -9,9 +9,11 @@ Este documento é a fonte de verdade para decidir se uma versão pode ser promov
 | Compilação e tipos | Automatizado | `pnpm run quality:production` executa fronteiras de domínio, dois typechecks e o build Next de produção. |
 | Configuração Vercel/Supabase | Automatizado antes da promoção | `pnpm run check:production-env` valida configuração pública, credencial server-side, segredos do worker e consistência Stripe sem imprimir valores. |
 | Segurança HTTP | Implementado | Respostas recebem `nosniff`, anti-frame, política de referrer e bloqueio de APIs sensíveis do browser. |
+| Fronteiras de autenticação API | Automatizado | `pnpm run check:api-auth` inventaria todos os handlers e exige autenticação de utilizador/admin ou controlo protocolar específico. Isto não comprova autorização por objeto nem RLS. |
 | Migrações | Gate manual | Aplicar todas as migrações por ordem e validar o SHA/ambiente antes de promover. Não há base Supabase de produção disponível no CI para ensaio destrutivo. |
 | Fluxos ponta a ponta | Gate manual | Exigem contas, MFA, Stripe e dados reais do ambiente Preview; usar a matriz abaixo. |
 | Visual e acessibilidade | Gate manual | Validar a matriz de viewports e os estados de interação abaixo no Preview do SHA candidato. |
+| Desempenho e UX | Gate manual | Registar LCP/INP/CLS e conclusão das tarefas principais em Preview; não declarar melhoria sem baseline comparável. |
 | Observabilidade e rollback | Gate operacional | Confirmar logs/alertas e manter o deployment anterior promovível. |
 
 ## Gate automático (bloqueador)
@@ -24,6 +26,8 @@ pnpm run quality:production
 ```
 
 O workflow **Application quality** corre o mesmo comando em cada pull request e push para `main`. Não promover se o workflow não terminou com sucesso.
+
+As normas de engenharia, a matriz de aceitação por papéis e o âmbito de privacidade/segurança específico da plataforma estão em [`ENGINEERING_STANDARDS.md`](./ENGINEERING_STANDARDS.md). A matriz usa dados sintéticos em ambiente isolado; evidência de CI não substitui a validação de RLS, economia, competição ou pagamentos.
 
 No ambiente Vercel que será promovido, executar também:
 
@@ -91,6 +95,17 @@ Antes da promoção:
 5. confirmar URLs de Auth, domínios permitidos, webhook Stripe e segredos apenas nos scopes corretos da Vercel;
 6. confirmar o cron de manutenção e uma execução manual autenticada;
 7. promover exatamente o deployment/commit aprovado, sem rebuild não auditado.
+
+Para `00530_social_friendship_follow_rpcs.sql` e `00531_community_content_rls.sql`, incluir ainda estas verificações em Preview:
+
+- sessão anónima não cria relações; utilizador não pode aceitar/remover pedido alheio;
+- bloqueios impedem seguir, pedir amizade e aceitar amizade; rejeitar um pedido pendente continua possível para o limpar quando existe bloqueio;
+- em comunidade pública, utilizador autenticado não membro pode ler publicação, comentários e reações, mas não pode comentar nem reagir;
+- em comunidade privada, não membro não lê publicação, comentários ou reações e não pode comentar nem reagir;
+- membro lê e escreve comentários e reações; autor incorreto (`author_user_id`/`user_id` de outra pessoa) é recusado;
+- repetir seguir/rejeitar/remover produz resultado seguro e não duplica relações nem notificações.
+
+As políticas de comentários e reações autorizam escrita por membership, sem distinção de papel OWNER/ADMIN/MODERATOR/MEMBER; não assumir moderação baseada em papel até existir regra e teste explícitos. Executar advisors de segurança após aplicação em Preview e guardar a saída como evidência. Estas migrações locais ainda não foram aplicadas nem verificadas contra um banco remoto.
 
 ## Observabilidade, go/no-go e rollback
 

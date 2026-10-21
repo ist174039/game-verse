@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { Gavel, Search, Store, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { EmptyState } from '@/components/ui/async-state'
 import { CurrencyDisplay } from '@/components/clan/currency-display'
 import { MarketListingCard } from '@/components/market/market-listing-card'
 import { PlatformPlayerCard } from '@/components/market/platform-player-card'
@@ -137,5 +138,5 @@ export function MarketPageClient({ market }: { market: MarketReadModel }) {
 }
 
 function EmptyMarket({ title, detail }: { title: string; detail: string }) {
-  return <div className="clan-panel-neutral flex min-h-72 flex-col items-center justify-center rounded-2xl p-8 text-center"><Store className="h-9 w-9 text-primary/60" /><h2 className="mt-4 text-lg font-semibold">{title}</h2><p className="mt-2 max-w-lg text-sm text-muted-foreground">{detail}</p></div>
+  return <EmptyState title={title} description={detail} className="clan-panel-neutral min-h-72 rounded-2xl p-8" />
 }

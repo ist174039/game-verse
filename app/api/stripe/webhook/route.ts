@@ -16,9 +16,8 @@ export async function POST(req: NextRequest) {
   let event: Stripe.Event
   try {
     event = getStripe().webhooks.constructEvent(await req.text(), signature, webhookSecret)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Signature verification failed'
-    return NextResponse.json({ error: message }, { status: 400 })
+  } catch {
+    return NextResponse.json({ error: 'stripe_signature_verification_failed' }, { status: 400 })
   }
 
   try {
@@ -37,8 +36,8 @@ export async function POST(req: NextRequest) {
         await registerRefund(event.data.object as Stripe.Charge)
         break
     }
-  } catch (error) {
-    console.error('Stripe webhook processing failed', { eventId: event.id, eventType: event.type, error })
+  } catch {
+    console.error('stripe_webhook_processing_failed', { eventId: event.id, eventType: event.type })
     return NextResponse.json({ error: 'Webhook processing failed' }, { status: 500 })
   }
 

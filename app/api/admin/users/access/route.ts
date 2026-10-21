@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { ADMIN_ROLES, canAdmin, getAdminSession } from '@/lib/server/admin-auth'
 import type { InternalRole } from '@/lib/domain/governance'
+import { allowlistedErrorCode } from '@/lib/server/safe-error-code'
 
 export const runtime='nodejs'
 export const dynamic='force-dynamic'
@@ -35,8 +36,8 @@ export async function POST(request:Request){
     p_reason:reason,
   })
   if(error){
-    const message=error.message||'admin_access_update_failed'
-    const status=message.includes('forbidden')?403:message.includes('last_super_admin_protected')?409:400
+    const message=allowlistedErrorCode(error,['admin_user_not_found','admin_role_invalid','admin_access_forbidden','last_super_admin_protected'],'admin_access_update_failed')
+    const status=message==='admin_access_forbidden'?403:message==='admin_role_invalid'?400:message==='admin_user_not_found'?404:409
     return NextResponse.json({error:message},{status})
   }
 

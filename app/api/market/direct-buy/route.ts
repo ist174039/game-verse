@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createApplicationServices } from '@/lib/infrastructure/repositories/supabase/factory'
+import { allowlistedErrorCode, MARKET_ERROR_CODES } from '@/lib/server/safe-error-code'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -18,7 +19,6 @@ export async function POST(request: Request) {
     const receipt = await services.market.buyDirectListing({ listingId: body.listingId, idempotencyKey: body.idempotencyKey })
     return NextResponse.json({ receipt })
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'market_purchase_failed'
-    return NextResponse.json({ error: message }, { status: 409 })
+    return NextResponse.json({ error: allowlistedErrorCode(error, MARKET_ERROR_CODES, 'market_purchase_failed') }, { status: 409 })
   }
 }

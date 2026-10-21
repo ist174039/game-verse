@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createApplicationServices } from '@/lib/infrastructure/repositories/supabase/factory'
+import { allowlistedErrorCode, COMPETITION_ERROR_CODES } from '@/lib/server/safe-error-code'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -13,5 +14,5 @@ export async function POST(request: Request) {
     const services = createApplicationServices(supabase)
     const dispute = await services.competitions.openDispute({ matchId: body.matchId, reason: body.reason.trim() })
     return NextResponse.json({ dispute })
-  } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : 'open_dispute_failed' }, { status: 409 }) }
+  } catch (error) { return NextResponse.json({ error: allowlistedErrorCode(error, COMPETITION_ERROR_CODES, 'open_dispute_failed') }, { status: 409 }) }
 }

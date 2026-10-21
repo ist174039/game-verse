@@ -144,6 +144,43 @@
   filter: grayscale(1);
   pointer-events: none;
 }
+
+/* WCAG 2.4.1 / 2.4.7: give keyboard users a direct route past repeated navigation. */
+.skip-link {
+  position: fixed;
+  z-index: 200;
+  top: .75rem;
+  left: .75rem;
+  transform: translateY(-180%);
+  border: 1px solid var(--primary);
+  border-radius: .65rem;
+  background: var(--background);
+  padding: .75rem 1rem;
+  color: var(--foreground);
+  font-size: .875rem;
+  font-weight: 700;
+  transition: transform 120ms ease-out;
+}
+.skip-link:focus-visible { transform: translateY(0); }
+
+/* Consistent visible focus for native controls and links that do not use shared UI primitives. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
 @media (max-width: 767px) {
   .brand-watermark::after { width: 20rem; height: 20rem; right: -9rem; top: -6rem; opacity: .025; }
+}
+
+/* Keep motion optional for players who request reduced animation. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

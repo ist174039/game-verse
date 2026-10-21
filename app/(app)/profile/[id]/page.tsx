@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createApplicationServices } from '@/lib/infrastructure/repositories/supabase/factory'
 import { Button } from '@/components/ui/button'
 import { ProfileIdentityClient } from '@/components/profile/profile-identity-client'
+import { ProfileSocialActions } from '@/components/social/profile-social-actions'
 
 export const dynamic = 'force-dynamic'
 type KitRow={club_id:string;kit_type:'HOME'|'AWAY'|'THIRD';image_url:string|null;primary_color:string;secondary_color:string}
@@ -19,6 +20,16 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   const services = createApplicationServices(supabase)
   const model = await services.reads.profile.load(id)
   if (!model) return notFound()
+
+  const isOwnProfile = user.id === model.profile.id
+  const [followResult, friendshipResult] = !isOwnProfile && !user.is_anonymous ? await Promise.all([
+    supabase.from('follow').select('follower_id').eq('follower_id', user.id).eq('followed_id', model.profile.id).maybeSingle(),
+    supabase.from('friendship').select('user_a,user_b,status').or(`and(user_a.eq.${user.id},user_b.eq.${model.profile.id}),and(user_a.eq.${model.profile.id},user_b.eq.${user.id})`).maybeSingle(),
+  ]) : [{ data: null, error: null }, { data: null, error: null }]
+  if (followResult.error) throw followResult.error
+  if (friendshipResult.error) throw friendshipResult.error
+  const relation = friendshipResult.data
+  const friendship = relation?.status === 'ACCEPTED' ? 'ACCEPTED' : relation?.status === 'PENDING' ? (relation.user_a === user.id ? 'OUTGOING' : 'INCOMING') : 'NONE'
 
   const clubIds=model.clubs.map(item=>item.club.id)
   const kitsQ=clubIds.length>0?await supabase.from('club_kit').select('club_id,kit_type,image_url,primary_color,secondary_color').in('club_id',clubIds):{data:[],error:null}
@@ -37,7 +48,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
           <p className="mt-2 text-sm text-muted-foreground">A identidade é global. Elo, prestígio, adeptos e contexto competitivo pertencem a cada clube dentro do respetivo universo.</p>
           <div className="mt-4 flex flex-wrap gap-2"><Badge label={`Nível ${model.profile.managerLevel}`} /><Badge label={`${model.profile.managerXp.toLocaleString('pt-PT')} XP`} /><Badge label={`Reputação ${model.profile.reputation}`} /><Badge label={model.profile.locale || 'pt'} /></div>
         </div>
-        {user.id === model.profile.id && <ProfileIdentityClient username={model.profile.username} avatarUrl={model.profile.avatarUrl}/>} 
+        {isOwnProfile ? <ProfileIdentityClient username={model.profile.username} avatarUrl={model.profile.avatarUrl}/> : !user.is_anonymous ? <ProfileSocialActions targetUserId={model.profile.id} initiallyFollowing={Boolean(followResult.data)} friendship={friendship}/> : null}
       </div>
     </section>
 
@@ -52,7 +63,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
       <div className="mt-5 divide-y divide-white/[0.06] border-y border-white/[0.06]">
         {model.clubs.length === 0 ? <p className="py-10 text-center text-sm text-muted-foreground">Este manager ainda não tem clubes.</p> : model.clubs.map(({ club, universe }) => {
           const clubKits=kits.filter(kit=>kit.club_id===club.id)
-          return <div key={club.id} className="grid gap-4 py-4 lg:grid-cols-[auto_1fr_auto] lg:items-center"><div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl border border-primary/15 bg-black/30">{club.logoUrl?<img src={club.logoUrl} alt={`Emblema ${club.name}`} className="h-full w-full object-contain p-1.5"/>:<Shield className="h-6 w-6 text-primary/50"/>}</div><div className="min-w-0"><p className="text-[9px] font-bold uppercase tracking-[0.15em] text-primary">{universe.name}</p><p className="mt-1 text-lg font-black">{club.name}</p><p className="mt-1 text-xs text-muted-foreground">Elo {club.elo.toLocaleString('pt-PT')} · Prestígio {club.prestige.toLocaleString('pt-PT')} · {club.fans.toLocaleString('pt-PT')} adeptos</p><div className="mt-3 flex items-center gap-2">{KIT_ORDER.map(type=>{const kit=clubKits.find(item=>item.kit_type===type);const fallback=type==='HOME'?['#111111','#F5BF16']:type==='AWAY'?['#F5BF16','#111111']:['#FFFFFF','#111111'];return <KitSwatch key={type} label={type} primary={kit?.primary_color??fallback[0]} secondary={kit?.secondary_color??fallback[1]} imageUrl={kit?.image_url??null}/>})}</div></div>{user.id === model.profile.id && <Button asChild variant="outline"><Link href={`/club?universe=${universe.id}`}>Gerir clube</Link></Button>}</div>
+          return <div key={club.id} className="grid gap-4 py-4 lg:grid-cols-[auto_1fr_auto] lg:items-center"><div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-xl border border-primary/15 bg-black/30">{club.logoUrl?<img src={club.logoUrl} alt={`Emblema ${club.name}`} loading="lazy" decoding="async" className="h-full w-full object-contain p-1.5"/>:<Shield className="h-6 w-6 text-primary/50"/>}</div><div className="min-w-0"><p className="text-[9px] font-bold uppercase tracking-[0.15em] text-primary">{universe.name}</p><p className="mt-1 text-lg font-black">{club.name}</p><p className="mt-1 text-xs text-muted-foreground">Elo {club.elo.toLocaleString('pt-PT')} · Prestígio {club.prestige.toLocaleString('pt-PT')} · {club.fans.toLocaleString('pt-PT')} adeptos</p><div className="mt-3 flex items-center gap-2">{KIT_ORDER.map(type=>{const kit=clubKits.find(item=>item.kit_type===type);const fallback=type==='HOME'?['#111111','#F5BF16']:type==='AWAY'?['#F5BF16','#111111']:['#FFFFFF','#111111'];return <KitSwatch key={type} label={type} primary={kit?.primary_color??fallback[0]} secondary={kit?.secondary_color??fallback[1]} imageUrl={kit?.image_url??null}/>})}</div></div>{user.id === model.profile.id && <Button asChild variant="outline"><Link href={`/club?universe=${universe.id}`}>Gerir clube</Link></Button>}</div>
         })}
       </div>
     </section>
@@ -61,4 +72,4 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
 
 function Badge({ label }: { label:string }) { return <span className="rounded-md border border-white/[0.07] bg-white/[0.02] px-2.5 py-1 text-[10px] font-semibold text-muted-foreground">{label}</span> }
 function Domain({ icon:Icon, title, text }: { icon:typeof Award; title:string; text:string }) { return <article className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-5"><Icon className="h-5 w-5 text-primary" /><h2 className="mt-4 font-black">{title}</h2><p className="mt-2 text-xs leading-5 text-muted-foreground">{text}</p></article> }
-function KitSwatch({label,primary,secondary,imageUrl}:{label:string;primary:string;secondary:string;imageUrl:string|null}){return <span title={`${label} · ${imageUrl?'imagem configurada':'cores configuradas'}`} className="relative h-7 w-9 overflow-hidden rounded-md border border-white/[.08]">{imageUrl?<img src={imageUrl} alt="" className="h-full w-full object-cover"/>:<span className="block h-full w-full" style={{background:`linear-gradient(135deg,${primary} 0 50%,${secondary} 50% 100%)`}}/>}</span>}
+function KitSwatch({label,primary,secondary,imageUrl}:{label:string;primary:string;secondary:string;imageUrl:string|null}){return <span title={`${label} · ${imageUrl?'imagem configurada':'cores configuradas'}`} className="relative h-7 w-9 overflow-hidden rounded-md border border-white/[.08]">{imageUrl?<img src={imageUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover"/>:<span className="block h-full w-full" style={{background:`linear-gradient(135deg,${primary} 0 50%,${secondary} 50% 100%)`}}/>}</span>}

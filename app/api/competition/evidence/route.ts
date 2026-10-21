@@ -15,6 +15,6 @@ export async function POST(request:Request){
   const metadata=body.metadata&&typeof body.metadata==='object'&&!Array.isArray(body.metadata)?body.metadata:{}
 
   const{data,error}=await supabase.rpc('register_match_evidence',{p_match_id:body.matchId,p_file_path:body.filePath,p_metadata:metadata})
-  if(error)return NextResponse.json({error:error.message||'evidence_registration_failed'},{status:409})
+  if(error)return NextResponse.json({error:'evidence_registration_failed'},{status:409})
   return NextResponse.json({evidence:data})
 }

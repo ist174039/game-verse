@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminApplicationServices } from '@/lib/infrastructure/repositories/supabase/factory'
 import { canAdmin, getAdminSession, type AdminAction } from '@/lib/server/admin-auth'
 import type { CaseStatus, FeatureFlag, FreezeScope, TicketStatus } from '@/lib/domain/governance'
+import { allowlistedErrorCode } from '@/lib/server/safe-error-code'
 
 export const runtime='nodejs'
 
@@ -13,14 +14,15 @@ const actionCapability:Record<string,AdminAction>={
 const isRecord=(value:unknown):value is Record<string,unknown>=>Boolean(value)&&typeof value==='object'&&!Array.isArray(value)
 const text=(value:unknown)=>typeof value==='string'?value.trim():''
 const uuidOrNull=(value:unknown)=>text(value)||null
-function errorMessage(error:unknown){
-  if(error instanceof Error)return error.message
-  if(error&&typeof error==='object'){
-    const value=error as {message?:unknown;details?:unknown;hint?:unknown}
-    return [value.message,value.details,value.hint].find(item=>typeof item==='string'&&item.length>0) as string|undefined ?? 'admin_operation_failed'
-  }
-  return 'admin_operation_failed'
-}
+const safeGovernanceErrors = [
+  'invalid_ticket_update','invalid_ticket_note','invalid_ticket_priority','invalid_ticket_reply',
+  'invalid_moderation_case','invalid_moderation_update','invalid_moderation_evidence','invalid_moderation_signal',
+  'invalid_freeze_request','invalid_freeze_release','invalid_feature_flag_update','invalid_platform_config_update',
+  'ticket_not_found','invalid_ticket_status','actor_required','change_reason_required','note_required',
+  'moderation_case_not_found','invalid_case_status','freeze_not_found','freeze_reason_required',
+  'release_reason_required','invalid_user_freeze_scope','invalid_club_freeze_scope','invalid_universe_freeze_scope',
+  'invalid_freeze_scope','invalid_feature_flag_scope','config_key_required','payment_order_not_found',
+] as const
 
 export async function POST(request:Request){
   const session=await getAdminSession()
@@ -117,8 +119,8 @@ export async function POST(request:Request){
     }
     return NextResponse.json({error:'unsupported_admin_action'},{status:400})
   }catch(error){
-    const code=errorMessage(error)
-    console.error('[admin-governance]',{action,code,error})
+    const code=allowlistedErrorCode(error,safeGovernanceErrors,'admin_operation_failed')
+    console.error('[admin-governance] operation_failed',{action,code})
     return NextResponse.json({error:code},{status:409})
   }
 }

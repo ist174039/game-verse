@@ -87,6 +87,16 @@ Glow só em CTA premium, seleção, troféus, ranking, moeda, rewards e momentos
 ## Core components
 Normalizar antes de páginas: AppShell, PageHeader, SectionHeader, Button, Input, Select, Search, Filters, Tabs, Card/Surface, PlayerCard, ClubCard, MatchCard, CompetitionCard, CurrencyDisplay, Ranking, Table, Pagination, Modal, Drawer, Toast, Tooltip, Badge, EmptyState, Skeleton, ErrorState, ConfirmationDialog.
 
+### shadcn/ui implementation standard
+- `components.json` is the local shadcn/ui configuration (`base-nova`, CSS variables, Tailwind v4, Lucide); `components/ui/*` is the project-owned component source.
+- Product pages compose these shared primitives and preserve the Clã tokens above. Do not introduce a parallel component library or copy one-off control styles into feature pages.
+- Use `Button`, `Input`, `Textarea`, `Select`, `Label`, `Dialog`/`ConfirmationDialog`, `Card`, `Badge`, and `Tabs` for their matching interactions. Add a shared primitive before repeating a new control pattern.
+- A wrapper may use Base UI or Radix internally where needed; the public app interface remains the shared shadcn-style component API. Document exceptions for accessibility or technical constraints.
+- Use shadcn Blocks as layout references for admin/auth flows, adapted to the product shell. Use shadcn Charts for charts when applicable and only with real or traceable data.
+
+### Refactor progress — 2026-10-21
+The repository already had shadcn configured and shared primitives in active use. Added the missing shared `Textarea` primitive and migrated community chat, private messages, community forms, and support ticket forms to shared inputs/textareas; support category and club selection now use the shared `Select`. Existing colors, sizing, and product layouts remain token-driven. This is an incremental refactor: remaining native controls in admin/backoffice and other feature surfaces still need inventory and migration. TypeScript and `git diff --check` passed; no browser, visual, accessibility, or interaction tests were run for this change.
+
 ## Football primitives
 - ClubIdentity: escudo/logo, nome, universo, divisão, ranking, prestígio.
 - MatchCard: competição/jornada, clubes, score dominante, estado, data e stats essenciais.
@@ -112,3 +122,30 @@ Mobile reorganiza, não encolhe desktop. Priorizar contexto + ação principal, 
 
 ## Enforcement
 Nenhuma página cria cores arbitrárias. Novos tokens entram primeiro em `app/globals.css`. Componentes reutilizáveis precedem implementações específicas de páginas. Qualquer novo fluxo com confirmação deve passar pelo sistema de modal; qualquer nova ação deve verificar primeiro as variantes globais do `Button`.
+
+## Reutilização de componentes
+- Extrair um componente partilhado quando o mesmo padrão visual/comportamental aparece em pelo menos duas áreas ou quando estados e acessibilidade precisam de permanecer idênticos.
+- Preferir componentes pequenos com props explícitas (`title`, `description`, estado, ação) a componentes genéricos com muitas flags condicionais.
+- Loading, vazio e erro devem usar `components/ui/async-state.tsx` quando o padrão servir; cada estado mantém altura mínima para evitar saltos de layout.
+- Componentes partilhados devem cobrir teclado, foco, semântica e responsividade. A página continua responsável pelo contexto e pela ação de recuperação.
+- Controlos com apenas ícone precisam de nome acessível; campos de composição de mensagens usam label programático, e falhas de envio são anunciadas como erro sem depender apenas de cor.
+- Não reutilizar por abstração apenas; consolidar quando reduzir inconsistência sem esconder regras específicas do domínio.
+
+## Performance e experiência
+- Preservar dimensões de imagens e superfícies assíncronas para reduzir CLS; imagens informativas devem declarar dimensões/`sizes`, e imagens abaixo da dobra devem carregar sob demanda.
+- Evitar pedidos repetidos em cascata; reutilizar dados já disponíveis no layout/página e medir antes de adicionar cache.
+- Para listas grandes, preferir paginação/limites no servidor e não renderizar coleções ilimitadas no cliente.
+- Medir Core Web Vitals e tarefas principais em Preview: LCP, INP e CLS, mais p50/p95 dos fluxos de API; definir metas por fluxo antes de afirmar melhoria.
+- Respeitar `prefers-reduced-motion`; movimento não pode ser necessário para perceber estado, ação ou feedback.
+- Usabilidade deve ser avaliada em tarefas reais: concluir onboarding, gerir clube, entrar numa competição e concluir uma operação de mercado. Registar sucesso, erros/abandono, tempo/esforço e feedback por viewport.
+
+## Princípios de diálogo e avaliação (ISO 9241)
+- **Adequação à tarefa:** mostrar contexto, estado e ação principal necessários para concluir onboarding, gestão de clube, competição, mercado e suporte; evitar dados decorativos que escondam a tarefa.
+- **Autodescrição:** campos têm labels persistentes; ações de ícone têm nome acessível; resultados, saldos e status incluem texto e não dependem só de cor.
+- **Controlo e expectativa:** back/cancelar está disponível quando a operação permite; ações destrutivas explicam impacto; loading/disabled previne submissão repetida sem esconder o resultado.
+- **Tolerância a erros:** validar cedo sem apagar valores; explicar erro junto do campo e oferecer recuperação/retry seguro; operações económicas continuam autoritativas no servidor.
+- **Aprendizagem e consistência:** usar tokens, componentes e termos estáveis; explicar novos conceitos na primeira utilização; não mudar a semântica de variantes entre páginas.
+- **Apresentação da informação:** agrupar dados relacionados, manter hierarquia e alinhamento, apresentar unidades/formatos e estados com texto, e oferecer resumo acessível quando tabelas ou gráficos forem densos.
+- **Ciclo centrado nas pessoas:** observar jogadores a concluir uma tarefa, registar perfil/contexto, conclusão, erros, esforço e feedback, priorizar alterações e repetir a avaliação. Sem recrutamento e evidência documentados, a avaliação fica pendente.
+
+O guião de recolha de métricas por tarefa e os critérios de fecho estão em [`QUALITY_TRACEABILITY.md`](./QUALITY_TRACEABILITY.md); as responsabilidades organizacionais e limitações de pesquisa estão em [`GOVERNANCE_CONTROLS.md`](./GOVERNANCE_CONTROLS.md).

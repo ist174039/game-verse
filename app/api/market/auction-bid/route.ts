@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createApplicationServices } from '@/lib/infrastructure/repositories/supabase/factory'
+import { allowlistedErrorCode, MARKET_ERROR_CODES } from '@/lib/server/safe-error-code'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -19,7 +20,6 @@ export async function POST(request: Request) {
     const bid = await services.market.placeAuctionBid({ listingId: body.listingId, amount: body.amount, idempotencyKey: body.idempotencyKey })
     return NextResponse.json({ bid })
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'auction_bid_failed'
-    return NextResponse.json({ error: message }, { status: 409 })
+    return NextResponse.json({ error: allowlistedErrorCode(error, MARKET_ERROR_CODES, 'auction_bid_failed') }, { status: 409 })
   }
 }

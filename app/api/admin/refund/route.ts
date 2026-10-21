@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     const services=createAdminApplicationServices(session.userClient,session.serviceClient)
     await services.governance.markPaymentRefundPending({orderId:order.id,actorUserId:session.user.id,reason,stripeRefundId:refund.id})
     return NextResponse.json({refundId:refund.id,status:refund.status??'pending'})
-  }catch(error){
-    return NextResponse.json({error:error instanceof Error?error.message:'stripe_refund_failed'},{status:409})
+  }catch{
+    return NextResponse.json({error:'refund_operation_failed'},{status:409})
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createApplicationServices } from '@/lib/infrastructure/repositories/supabase/factory'
+import { allowlistedErrorCode, MARKET_ERROR_CODES } from '@/lib/server/safe-error-code'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -32,6 +33,6 @@ export async function POST(request: Request) {
     await services.market.cancelListing({ listingId, idempotencyKey })
     return NextResponse.json({ success: true, listingId })
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'cancel_listing_failed' }, { status: 409 })
+    return NextResponse.json({ error: allowlistedErrorCode(error, MARKET_ERROR_CODES, 'cancel_listing_failed') }, { status: 409 })
   }
 }
