@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Database, Layers3, Loader2, RefreshCw, SearchCheck, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 interface UniverseOption { id:string;name:string;kind:string;state:string }
 interface CatalogCycleProgress {current:number;total:number;page:number;completed:number;failed:number}
@@ -107,7 +109,7 @@ export function PesdbProviderClient({universes,principalUniverseId,canManage}:{u
       <article className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-5">
         <div className="flex items-center gap-2"><RefreshCw className="h-4 w-4 text-primary"/><h2 className="font-black">Sincronizar catálogo</h2></div>
         <p className="mt-2 text-xs leading-5 text-muted-foreground">Importação manual para ampliar o catálogo. A página 1 contém jogadores de topo; estes podem existir no mercado, mas não entram no starter squad.</p>
-        <Field label="Páginas do ciclo"><input className={`${inputClass} mt-1`} value={catalogPages} onChange={event=>setCatalogPages(event.target.value)} placeholder="1-10, 15, 20-24"/></Field>
+        <Field label="Páginas do ciclo"><Input className="mt-1 h-10" aria-label="Páginas do ciclo" value={catalogPages} onChange={event=>setCatalogPages(event.target.value)} placeholder="1-10, 15, 20-24"/></Field>
         <p className={`mt-2 text-[10px] leading-4 ${parsedCatalogPages.error?'text-destructive':'text-muted-foreground'}`}>{parsedCatalogPages.error??`${parsedCatalogPages.pages.length} página${parsedCatalogPages.pages.length===1?'':'s'} definida${parsedCatalogPages.pages.length===1?'':'s'} · máximo ${MAX_CATALOG_PAGES_PER_CYCLE} por ciclo.`}</p>
         {loading==='syncCatalog'&&catalogProgress?<div aria-live="polite" className="mt-4 rounded-xl border border-primary/15 bg-primary/[0.025] p-3"><div className="flex items-center justify-between gap-3 text-xs"><span className="inline-flex items-center gap-2 font-bold"><Loader2 className="h-3.5 w-3.5 animate-spin text-primary"/>Página {catalogProgress.page}</span><span className="text-muted-foreground">{catalogProgress.current}/{catalogProgress.total}</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]"><div className="h-full rounded-full bg-primary transition-[width]" style={{width:`${Math.round((catalogProgress.current/catalogProgress.total)*100)}%`}}/></div><p className="mt-2 text-[10px] text-muted-foreground">Mantém esta página aberta · {catalogProgress.completed} concluídas · {catalogProgress.failed} falhas</p></div>:null}
         <Button className="mt-4" variant="outline" disabled={!canManage||loading!==null||Boolean(parsedCatalogPages.error)} onClick={()=>void syncCatalogCycle()}>{loading==='syncCatalog'?<><Loader2 className="h-4 w-4 animate-spin"/>A sincronizar ciclo…</>:'Iniciar ciclo de páginas'}</Button>
@@ -116,15 +118,15 @@ export function PesdbProviderClient({universes,principalUniverseId,canManage}:{u
       <article className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-5">
         <div className="flex items-center gap-2"><SearchCheck className="h-4 w-4 text-primary"/><h2 className="font-black">Enriquecer jogadores</h2></div>
         <p className="mt-2 text-xs leading-5 text-muted-foreground">Lê fichas individuais para atributos, estilo, skills, pé, equipa e liga. Máximo de 6 IDs por operação.</p>
-        <Field label="IDs PESDB"><input className={`${inputClass} mt-1`} placeholder="110718, 105683844338090" value={detailIds} onChange={e=>setDetailIds(e.target.value)}/></Field>
+        <Field label="IDs PESDB"><Input className="mt-1 h-10" aria-label="IDs PESDB" placeholder="110718, 105683844338090" value={detailIds} onChange={e=>setDetailIds(e.target.value)}/></Field>
         <Button className="mt-4" variant="outline" disabled={!canManage||loading!==null||detailIds.trim().length===0} onClick={()=>execute('syncDetails',{externalIds:detailIds})}>{loading==='syncDetails'?'A enriquecer…':'Sincronizar detalhes'}</Button>
       </article>
 
       <article className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-5">
         <div className="flex items-center gap-2"><Layers3 className="h-4 w-4 text-primary"/><h2 className="font-black">Materializar no universo</h2></div>
         <p className="mt-2 text-xs leading-5 text-muted-foreground">Cria `UniversePlayer`, calcula valores económicos e tenta completar automaticamente plantéis abaixo do mínimo.</p>
-        <Field label="Universo"><select className={`${inputClass} mt-1`} value={universeId} onChange={e=>setUniverseId(e.target.value)}>{universes.map(u=><option key={u.id} value={u.id}>{u.name} · {u.kind} · {u.state}</option>)}</select></Field>
-        <Field label="Máximo de jogadores"><input className={`${inputClass} mt-1`} type="number" min={1} max={5000} value={limit} onChange={e=>setLimit(Math.max(1,Math.min(5000,Number(e.target.value)||500)))}/></Field>
+        <Field label="Universo"><Select value={universeId} onValueChange={next=>{if(next!==null)setUniverseId(next)}}><SelectTrigger aria-label="Universo" className="mt-1 h-10 w-full"><SelectValue placeholder="Seleciona um universo"/></SelectTrigger><SelectContent>{universes.map(u=><SelectItem key={u.id} value={u.id}>{u.name} · {u.kind} · {u.state}</SelectItem>)}</SelectContent></Select></Field>
+        <Field label="Máximo de jogadores"><Input className="mt-1 h-10" aria-label="Máximo de jogadores" type="number" min={1} max={5000} value={limit} onChange={e=>setLimit(Math.max(1,Math.min(5000,Number(e.target.value)||500)))}/></Field>
         <Button className="mt-4" disabled={!canManage||loading!==null||!universeId} onClick={()=>setConfirmMaterialize(true)}>Materializar e completar plantéis</Button>
       </article>
     </section>
@@ -154,5 +156,4 @@ function CatalogCycleSummary({result}:{result:CatalogCycleResult}){
 
 function CycleMetric({label,value}:{label:string;value:string}){return <div className="rounded-xl border border-white/[0.07] bg-black/20 p-3"><p className="text-[10px] uppercase tracking-[.12em] text-muted-foreground">{label}</p><p className="mt-1 text-lg font-black tabular-nums">{value}</p></div>}
 
-function Field({label,children}:{label:string;children:ReactNode}){return <label className="mt-4 block text-[10px] font-bold uppercase tracking-[.12em] text-muted-foreground">{label}{children}</label>}
-const inputClass='h-10 w-full rounded-lg border border-white/[0.09] bg-black/30 px-3 text-sm font-semibold text-foreground outline-none transition focus:border-primary/35'
+function Field({label,children}:{label:string;children:ReactNode}){return <div className="mt-4 grid gap-1.5"><span className="text-[10px] font-bold uppercase tracking-[.12em] text-muted-foreground">{label}</span>{children}</div>}

@@ -94,8 +94,15 @@ Normalizar antes de páginas: AppShell, PageHeader, SectionHeader, Button, Input
 - A wrapper may use Base UI or Radix internally where needed; the public app interface remains the shared shadcn-style component API. Document exceptions for accessibility or technical constraints.
 - Use shadcn Blocks as layout references for admin/auth flows, adapted to the product shell. Use shadcn Charts for charts when applicable and only with real or traceable data.
 
+### Form field standard
+- Ordinary text, number, date, textarea, and choice controls use the shared `Input`, `Textarea`, or `Select` primitive. Keep native controls only for specialized browser interactions such as file upload, color selection, and hidden form values.
+- Every control has a persistent visible label or a deliberate accessible name. Use `Label htmlFor` for inputs and textareas; for composite controls such as `Select`, connect the visible label with `aria-labelledby` on the trigger.
+- Associate help and validation messages with the control using stable IDs and `aria-describedby`. Invalid controls set `aria-invalid`; errors that appear asynchronously are announced with `role="alert"`.
+- Use the same field spacing and label treatment across product, admin, and support surfaces. Feature-specific layout can vary, but field semantics and shared control styling do not.
+- Do not wrap composite interactive controls in a native `<label>` as a layout shortcut. Use a containing `<div>` and an explicit accessible name.
+
 ### Refactor progress — 2026-10-21
-The repository already had shadcn configured and shared primitives in active use. Added the missing shared `Textarea` primitive and migrated community chat, private messages, community forms, and support ticket forms to shared inputs/textareas; support category and club selection now use the shared `Select`. Existing colors, sizing, and product layouts remain token-driven. This is an incremental refactor: remaining native controls in admin/backoffice and other feature surfaces still need inventory and migration. TypeScript and `git diff --check` passed; no browser, visual, accessibility, or interaction tests were run for this change.
+The repository already had shadcn configured and shared primitives in active use. The shared `Textarea` primitive is used across community chat, private messages, community and support forms. Admin/backoffice forms, player catalogue filters, universe creation, admin access, economic freeze/refund reasons, and contextual universe/formation selects now use the shared `Input`, `Textarea`, and `Select` API. Select labels are connected with `aria-labelledby`; text controls use visible labels or explicit accessible names, and asynchronous errors are announced and associated where present. Native controls remain for file upload, color input, and hidden form values. Product tokens and layouts remain intact. `tsc --noEmit` and `git diff --check` passed; no browser, visual, keyboard, or interaction checks were run.
 
 ## Football primitives
 - ClubIdentity: escudo/logo, nome, universo, divisão, ranking, prestígio.

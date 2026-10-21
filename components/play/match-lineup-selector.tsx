@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { CheckCircle2, Circle, ShieldCheck, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 export interface MatchLineupPlayerOption {
   id: string
@@ -96,10 +97,15 @@ export function MatchLineupSelector({
 
       <div className="mt-5 grid gap-4 lg:grid-cols-[180px_1fr]">
         <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-          <label className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground" htmlFor="formation">Formação</label>
-          <select id="formation" value={formation} onChange={event => setFormation(event.target.value)} disabled={!editable || loading} className="mt-2 h-10 w-full rounded-lg border border-white/[0.09] bg-[#101010] px-3 text-sm font-bold outline-none focus:border-primary/40 disabled:opacity-50">
-            {formations.map(value => <option key={value} value={value}>{value}</option>)}
-          </select>
+          <span id="formation-label" className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Formação</span>
+          <Select value={formation} onValueChange={value => { if (value) setFormation(value) }} disabled={!editable || loading}>
+            <SelectTrigger id="formation" aria-labelledby="formation-label" className="mt-2 h-10 w-full rounded-lg border-white/[0.09] bg-[#101010] px-3 text-sm font-bold">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {formations.map(value => <SelectItem key={value} value={value}>{value}</SelectItem>)}
+            </SelectContent>
+          </Select>
           <div className="mt-4 rounded-lg border border-primary/12 bg-primary/[0.035] p-3">
             <p className="text-2xl font-black text-primary">{selected.length}<span className="text-sm text-muted-foreground">/11</span></p>
             <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-muted-foreground">selecionados</p>

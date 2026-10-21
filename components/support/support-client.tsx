@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo,useState } from 'react'
+import { cloneElement,isValidElement,useId,useMemo,useState,type ReactElement, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import { CheckCircle2, Clock3, Headphones, MessageSquareText, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -29,7 +29,7 @@ export function SupportClient({userId,tickets,notes,clubs}:{userId:string;ticket
     <Dialog open={Boolean(selected)} onOpenChange={value=>{if(!value&&!loading)setSelected(null)}}><DialogContent><DialogHeader><DialogTitle>{selected?.status==='CLOSED'?'Reabrir pedido':'Responder ao suporte'}</DialogTitle><DialogDescription>{selected?.subject}</DialogDescription></DialogHeader><DialogBody><form id="support-reply" onSubmit={sendReply}><Field label={selected?.status==='CLOSED'?'Motivo para reabrir':'Mensagem'}><Textarea required minLength={2} maxLength={4000} value={reply} onChange={e=>setReply(e.target.value)} rows={6} className="resize-y"/></Field>{error&&<ErrorText>{error}</ErrorText>}</form></DialogBody><DialogFooter><Button type="button" variant="ghost" onClick={()=>setSelected(null)} disabled={loading}>Cancelar</Button><Button type="submit" form="support-reply" disabled={loading||reply.trim().length<2}>{loading?'A enviar…':selected?.status==='CLOSED'?'Reabrir':'Enviar resposta'}</Button></DialogFooter></DialogContent></Dialog>
   </div>
 }
-function Field({label,children}:{label:string;children:React.ReactNode}){return <label className="block"><span className="mb-2 block text-xs font-bold text-muted-foreground">{label}</span>{children}</label>}
+function Field({label,children}:{label:string;children:ReactNode}){const id=useId();return <div className="block"><span id={`${id}-label`} className="mb-2 block text-xs font-bold text-muted-foreground">{label}</span>{isValidElement(children)?cloneElement(children as ReactElement<{id?:string;'aria-labelledby'?:string}>,{id, 'aria-labelledby':`${id}-label`}):children}</div>}
 function Metric({icon:Icon,label,value}:{icon:typeof Clock3;label:string;value:number}){return <div className="rounded-2xl border border-white/[.07] bg-[#0b0b0b] p-5"><Icon className="h-4 w-4 text-primary"/><p className="mt-3 text-2xl font-black">{value}</p><p className="mt-1 text-xs text-muted-foreground">{label}</p></div>}
 function Status({value}:{value:string}){return <span className={`rounded-md border px-2 py-1 text-[9px] font-black uppercase tracking-[.12em] ${value==='WAITING_USER'?'border-primary/20 bg-primary/[.06] text-primary':['RESOLVED','CLOSED'].includes(value)?'border-white/[.07] bg-white/[.03] text-muted-foreground':'border-emerald-500/15 bg-emerald-500/[.05] text-emerald-300'}`}>{value.replaceAll('_',' ')}</span>}
-function ErrorText({children}:{children:React.ReactNode}){return <p className="mt-3 rounded-xl border border-destructive/20 bg-destructive/[.06] p-3 text-xs text-destructive">{children}</p>}
+function ErrorText({children}:{children:ReactNode}){return <p role="alert" className="mt-3 rounded-xl border border-destructive/20 bg-destructive/[.06] p-3 text-xs text-destructive">{children}</p>}

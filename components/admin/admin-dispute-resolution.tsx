@@ -6,6 +6,7 @@ import { CheckCircle2, PencilLine, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 
 type Decision='UPHOLD'|'CORRECT_SCORE'|'REPLAY'
 
@@ -106,13 +107,14 @@ export function AdminDisputeResolution({
           <label className="space-y-1.5 text-xs text-muted-foreground">{awayClub}<Input type="number" min={0} step={1} value={correctedAway} onChange={event=>setCorrectedAway(Number(event.target.value))}/></label>
         </div>}
         <label className="block space-y-1.5 text-xs text-muted-foreground">Motivo administrativo
-          <textarea
+          <Textarea
+            aria-label="Motivo administrativo"
             value={reason}
             onChange={event=>setReason(event.target.value)}
             rows={4}
             maxLength={1000}
             placeholder="Explica a evidência analisada e a decisão tomada…"
-            className="w-full rounded-[10px] border border-white/[.105] bg-[#0d0d0d] px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary/40 focus:ring-2 focus:ring-primary/15"
+            className="resize-y"
           />
         </label>
         {error&&<p className="rounded-lg border border-destructive/20 bg-destructive/[0.06] p-3 text-xs text-destructive">{error}</p>}

@@ -5,6 +5,8 @@ import { canAdmin, getAdminSession } from '@/lib/server/admin-auth'
 import { PESDB_PROVIDER } from '@/lib/infrastructure/providers/pesdb'
 import { PesdbProviderClient } from '@/components/admin/pesdb-provider-client'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 export const dynamic='force-dynamic'
 const POSITIONS=['GK','CB','LB','RB','DMF','CMF','AMF','LMF','RMF','LWF','RWF','SS','CF']
@@ -73,11 +75,11 @@ export default async function AdminPlayersPage({searchParams}:{searchParams:Prom
     <section className="rounded-2xl border border-white/[0.07] bg-[#0b0b0b] p-5 sm:p-6">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between"><div><h2 className="text-xl font-black">Jogadores sincronizados</h2><p className="mt-1 text-xs text-muted-foreground">{total.toLocaleString('pt-PT')} resultado{total===1?'':'s'} com os filtros atuais.</p></div>
       <form action="/admin/players" className="grid gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_110px_92px_92px_90px_auto]">
-        <label className="relative"><Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground"/><input name="q" defaultValue={q} placeholder="Nome, PESDB ID ou país" className="h-10 w-full rounded-xl border border-white/[.08] bg-black/25 pl-9 pr-3 text-sm outline-none focus:border-primary/45"/></label>
-        <select name="position" defaultValue={position} className="h-10 rounded-xl border border-white/[.08] bg-[#111] px-3 text-sm outline-none"><option value="">Posição</option>{POSITIONS.map(item=><option key={item} value={item}>{item}</option>)}</select>
-        <input name="minOvr" type="number" min="1" max="100" defaultValue={minOvr===1?'':minOvr} placeholder="OVR min" className="h-10 rounded-xl border border-white/[.08] bg-black/25 px-3 text-sm outline-none"/>
-        <input name="maxOvr" type="number" min="1" max="100" defaultValue={maxOvr===100?'':maxOvr} placeholder="OVR max" className="h-10 rounded-xl border border-white/[.08] bg-black/25 px-3 text-sm outline-none"/>
-        <select name="size" defaultValue={String(size)} className="h-10 rounded-xl border border-white/[.08] bg-[#111] px-3 text-sm outline-none"><option value="25">25 / pág.</option><option value="50">50 / pág.</option><option value="100">100 / pág.</option></select>
+        <div className="relative"><Search className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-muted-foreground"/><Input name="q" aria-label="Pesquisar jogador" defaultValue={q} placeholder="Nome, PESDB ID ou país" className="h-10 bg-black/25 pl-9 pr-3"/></div>
+        <Select name="position" defaultValue={position||'ALL'}><SelectTrigger aria-label="Posição" className="h-10 w-full"><SelectValue placeholder="Posição"/></SelectTrigger><SelectContent><SelectItem value="ALL">Todas</SelectItem>{POSITIONS.map(item=><SelectItem key={item} value={item}>{item}</SelectItem>)}</SelectContent></Select>
+        <Input name="minOvr" aria-label="Overall mínimo" type="number" min="1" max="100" defaultValue={minOvr===1?'':minOvr} placeholder="OVR min" className="h-10 bg-black/25 px-3"/>
+        <Input name="maxOvr" aria-label="Overall máximo" type="number" min="1" max="100" defaultValue={maxOvr===100?'':maxOvr} placeholder="OVR max" className="h-10 bg-black/25 px-3"/>
+        <Select name="size" defaultValue={String(size)}><SelectTrigger aria-label="Resultados por página" className="h-10 w-full"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="25">25 / pág.</SelectItem><SelectItem value="50">50 / pág.</SelectItem><SelectItem value="100">100 / pág.</SelectItem></SelectContent></Select>
         <Button type="submit" size="sm" className="h-10">Pesquisar</Button>
       </form></div>
       {(q||position||minOvr!==1||maxOvr!==100||size!==25)&&<div className="mt-3 flex justify-end"><Button asChild variant="ghost" size="sm"><Link href="/admin/players">Limpar filtros</Link></Button></div>}
